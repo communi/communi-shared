@@ -22,7 +22,9 @@ ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
     d.channel = 0;
+    d.timestamp = 0;
     d.playback = false;
+    d.timestamper.invalidate();
     d.timeStampFormat = "[hh:mm:ss]";
     setModel(qobject_cast<IrcChannelModel*>(parent));
 }
@@ -49,11 +51,19 @@ IrcChannelModel* ZncManager::model() const
 void ZncManager::setModel(IrcChannelModel* model)
 {
     if (d.model != model) {
-        if (d.model && d.model->session())
-            d.model->session()->removeMessageFilter(this);
+        if (d.model && d.model->session()) {
+            IrcSession* session = d.model->session();
+            disconnect(session, SIGNAL(connected()), this, SLOT(onConnected()));
+            disconnect(session, SIGNAL(capabilities(QStringList,QStringList*)), this, SLOT(onCapabilities(QStringList,QStringList*)));
+            session->removeMessageFilter(this);
+        }
         d.model = model;
-        if (d.model && d.model->session())
-            d.model->session()->installMessageFilter(this);
+        if (d.model && d.model->session()) {
+            IrcSession* session = d.model->session();
+            connect(session, SIGNAL(connected()), this, SLOT(onConnected()));
+            connect(session, SIGNAL(capabilities(QStringList,QStringList*)), this, SLOT(onCapabilities(QStringList,QStringList*)));
+            session->installMessageFilter(this);
+        }
         emit modelChanged(model);
     }
 }
@@ -73,6 +83,14 @@ void ZncManager::setTimeStampFormat(const QString& format)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
+    if (d.timestamp > 0 && d.timestamper.isValid()) {
+        long elapsed = d.timestamper.elapsed() / 1000;
+        if (elapsed > 0) {
+            d.timestamp += elapsed;
+            d.timestamper.restart();
+        }
+    }
+
     if (message->type() == IrcMessage::Private) {
         IrcSender sender = message->sender();
         if (sender.name() == QLatin1String("***") && sender.user() == QLatin1String("znc")) {
@@ -101,6 +119,12 @@ bool ZncManager::messageFilter(IrcMessage* message)
                 }
                 return false;
             }
+        }
+    } else if (message->type() == IrcMessage::Notice) {
+        if (message->sender().name() == "*communi") {
+            d.timestamp = static_cast<IrcNoticeMessage*>(message)->message().toLong();
+            d.timestamper.restart();
+            return true;
         }
     }
 
@@ -193,4 +217,17 @@ bool ZncManager::processNotice(IrcNoticeMessage* message)
         }
     }
     return false;
+}
+
+void ZncManager::onConnected()
+{
+    d.timestamper.invalidate();
+}
+
+void ZncManager::onCapabilities(const QStringList& available, QStringList* request)
+{
+    if (available.contains("communi")) {
+        request->append("communi");
+        request->append(QString("communi/%1").arg(d.timestamp));
+    }
 }

@@ -16,6 +16,7 @@
 #define ZNCMANAGER_H
 
 #include <QObject>
+#include <QElapsedTimer>
 #include <IrcChannelModel>
 #include <IrcMessageFilter>
 
@@ -55,13 +56,19 @@ protected:
     bool processMessage(IrcPrivateMessage* message);
     bool processNotice(IrcNoticeMessage* message);
 
+private slots:
+    void onConnected();
+    void onCapabilities(const QStringList& available, QStringList* request);
+
 private:
     mutable struct Private {
         bool playback;
+        long timestamp;
         QString target;
         IrcChannel* channel;
         IrcChannelModel* model;
         QString timeStampFormat;
+        QElapsedTimer timestamper;
     } d;
 };
 
