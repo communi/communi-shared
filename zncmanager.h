@@ -12,8 +12,8 @@
 * GNU General Public License for more details.
 */
 
-#ifndef ZNCPLAYBACK_H
-#define ZNCPLAYBACK_H
+#ifndef ZNCMANAGER_H
+#define ZNCMANAGER_H
 
 #include <QObject>
 #include <IrcChannelModel>
@@ -22,20 +22,20 @@
 class IrcNoticeMessage;
 class IrcPrivateMessage;
 
-class ZncPlayback : public QObject, public IrcMessageFilter
+class ZncManager : public QObject, public IrcMessageFilter
 {
     Q_OBJECT
-    Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
-    Q_PROPERTY(QString currentTarget READ currentTarget NOTIFY currentTargetChanged)
+    Q_PROPERTY(bool playbackActive READ isPlaybackActive NOTIFY playbackActiveChanged)
+    Q_PROPERTY(QString playbackTarget READ playbackTarget NOTIFY playbackTargetChanged)
     Q_PROPERTY(IrcChannelModel* model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QString timeStampFormat READ timeStampFormat WRITE setTimeStampFormat NOTIFY timeStampFormatChanged)
 
 public:
-    explicit ZncPlayback(QObject* parent = 0);
-    virtual ~ZncPlayback();
+    explicit ZncManager(QObject* parent = 0);
+    virtual ~ZncManager();
 
-    bool isActive() const;
-    QString currentTarget() const;
+    bool isPlaybackActive() const;
+    QString playbackTarget() const;
 
     IrcChannelModel* model() const;
     void setModel(IrcChannelModel* model);
@@ -46,9 +46,9 @@ public:
     bool messageFilter(IrcMessage* message);
 
 signals:
-    void activeChanged(bool active);
+    void playbackActiveChanged(bool active);
     void modelChanged(IrcChannelModel* model);
-    void currentTargetChanged(const QString& target);
+    void playbackTargetChanged(const QString& target);
     void timeStampFormatChanged(const QString& format);
 
 protected:
@@ -57,7 +57,7 @@ protected:
 
 private:
     mutable struct Private {
-        bool active;
+        bool playback;
         QString target;
         IrcChannel* channel;
         IrcChannelModel* model;
@@ -65,4 +65,4 @@ private:
     } d;
 };
 
-#endif // ZNCPLAYBACK_H
+#endif // ZNCMANAGER_H

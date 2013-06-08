@@ -12,41 +12,41 @@
 * GNU General Public License for more details.
 */
 
-#include "zncplayback.h"
+#include "zncmanager.h"
 #include <ircsession.h>
 #include <ircmessage.h>
 #include <ircchannel.h>
 #include <ircsender.h>
 
-ZncPlayback::ZncPlayback(QObject* parent) : QObject(parent)
+ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
     d.channel = 0;
-    d.active = false;
+    d.playback = false;
     d.timeStampFormat = "[hh:mm:ss]";
     setModel(qobject_cast<IrcChannelModel*>(parent));
 }
 
-ZncPlayback::~ZncPlayback()
+ZncManager::~ZncManager()
 {
 }
 
-bool ZncPlayback::isActive() const
+bool ZncManager::isPlaybackActive() const
 {
-    return d.active;
+    return d.playback;
 }
 
-QString ZncPlayback::currentTarget() const
+QString ZncManager::playbackTarget() const
 {
     return d.target;
 }
 
-IrcChannelModel* ZncPlayback::model() const
+IrcChannelModel* ZncManager::model() const
 {
     return d.model;
 }
 
-void ZncPlayback::setModel(IrcChannelModel* model)
+void ZncManager::setModel(IrcChannelModel* model)
 {
     if (d.model != model) {
         if (d.model && d.model->session())
@@ -58,12 +58,12 @@ void ZncPlayback::setModel(IrcChannelModel* model)
     }
 }
 
-QString ZncPlayback::timeStampFormat() const
+QString ZncManager::timeStampFormat() const
 {
     return d.timeStampFormat;
 }
 
-void ZncPlayback::setTimeStampFormat(const QString& format)
+void ZncManager::setTimeStampFormat(const QString& format)
 {
     if (d.timeStampFormat != format) {
         d.timeStampFormat = format;
@@ -71,7 +71,7 @@ void ZncPlayback::setTimeStampFormat(const QString& format)
     }
 }
 
-bool ZncPlayback::messageFilter(IrcMessage* message)
+bool ZncManager::messageFilter(IrcMessage* message)
 {
     if (message->type() == IrcMessage::Private) {
         IrcSender sender = message->sender();
@@ -79,32 +79,32 @@ bool ZncPlayback::messageFilter(IrcMessage* message)
             IrcPrivateMessage* privMsg = static_cast<IrcPrivateMessage*>(message);
             QString content = privMsg->message();
             if (content == QLatin1String("Buffer Playback...")) {
-                if (!d.active) {
-                    d.active = true;
-                    emit activeChanged(d.active);
+                if (!d.playback) {
+                    d.playback = true;
+                    emit playbackActiveChanged(d.playback);
                 }
                 if (d.target != privMsg->target()) {
                     d.target = privMsg->target();
                     d.channel = d.model->channel(d.target);
-                    emit currentTargetChanged(d.target);
+                    emit playbackTargetChanged(d.target);
                 }
                 return false;
             } else if (content == QLatin1String("Playback Complete.")) {
-                if (d.active) {
-                    d.active = false;
-                    emit activeChanged(d.active);
+                if (d.playback) {
+                    d.playback = false;
+                    emit playbackActiveChanged(d.playback);
                 }
                 if (!d.target.isEmpty()) {
                     d.channel = 0;
                     d.target.clear();
-                    emit currentTargetChanged(d.target);
+                    emit playbackTargetChanged(d.target);
                 }
                 return false;
             }
         }
     }
 
-    if (d.active && d.channel) {
+    if (d.playback && d.channel) {
         switch (message->type()) {
         case IrcMessage::Private:
             return processMessage(static_cast<IrcPrivateMessage*>(message));
@@ -117,7 +117,7 @@ bool ZncPlayback::messageFilter(IrcMessage* message)
     return false;
 }
 
-bool ZncPlayback::processMessage(IrcPrivateMessage* message)
+bool ZncManager::processMessage(IrcPrivateMessage* message)
 {
     QString msg = message->message();
     int idx = msg.indexOf(" ");
@@ -178,7 +178,7 @@ bool ZncPlayback::processMessage(IrcPrivateMessage* message)
     return false;
 }
 
-bool ZncPlayback::processNotice(IrcNoticeMessage* message)
+bool ZncManager::processNotice(IrcNoticeMessage* message)
 {
     QString msg = message->message();
     int idx = msg.indexOf(" ");
