@@ -14,28 +14,29 @@
 
 #include "sortedusermodel.h"
 #include <IrcSessionInfo>
+#include <IrcBufferModel>
 #include <IrcUserModel>
 #include <IrcSession>
-#include <IrcChannel>
+#include <IrcBuffer>
 
 SortedUserModel::SortedUserModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
     setDynamicSortFilter(true);
     setSourceModel(new IrcUserModel(this));
-    setChannel(qobject_cast<IrcChannel*>(parent));
+    setBuffer(qobject_cast<IrcBuffer*>(parent));
 }
 
-IrcChannel* SortedUserModel::channel() const
+IrcBuffer* SortedUserModel::buffer() const
 {
-    return static_cast<IrcUserModel*>(sourceModel())->channel();
+    return static_cast<IrcUserModel*>(sourceModel())->buffer();
 }
 
-void SortedUserModel::setChannel(IrcChannel* channel)
+void SortedUserModel::setBuffer(IrcBuffer* buffer)
 {
-    static_cast<IrcUserModel*>(sourceModel())->setChannel(channel);
+    static_cast<IrcUserModel*>(sourceModel())->setBuffer(buffer);
 
-    if (channel) {
-        m_prefixes = IrcSessionInfo(channel->session()).prefixes();
+    if (buffer) {
+        m_prefixes = IrcSessionInfo(buffer->model()->session()).prefixes();
         sort(0, Qt::AscendingOrder);
     }
 }

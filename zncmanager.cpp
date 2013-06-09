@@ -15,18 +15,18 @@
 #include "zncmanager.h"
 #include <ircsession.h>
 #include <ircmessage.h>
-#include <ircchannel.h>
+#include <ircbuffer.h>
 #include <ircsender.h>
 
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
-    d.channel = 0;
+    d.buffer = 0;
     d.timestamp = 0;
     d.playback = false;
     d.timestamper.invalidate();
     d.timeStampFormat = "[hh:mm:ss]";
-    setModel(qobject_cast<IrcChannelModel*>(parent));
+    setModel(qobject_cast<IrcBufferModel*>(parent));
 }
 
 ZncManager::~ZncManager()
@@ -43,12 +43,12 @@ QString ZncManager::playbackTarget() const
     return d.target;
 }
 
-IrcChannelModel* ZncManager::model() const
+IrcBufferModel* ZncManager::model() const
 {
     return d.model;
 }
 
-void ZncManager::setModel(IrcChannelModel* model)
+void ZncManager::setModel(IrcBufferModel* model)
 {
     if (d.model != model) {
         if (d.model && d.model->session()) {
@@ -103,7 +103,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
                 }
                 if (d.target != privMsg->target()) {
                     d.target = privMsg->target();
-                    d.channel = d.model->channel(d.target);
+                    d.buffer = d.model->buffer(d.target);
                     emit playbackTargetChanged(d.target);
                 }
                 return false;
@@ -113,7 +113,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
                     emit playbackActiveChanged(d.playback);
                 }
                 if (!d.target.isEmpty()) {
-                    d.channel = 0;
+                    d.buffer = 0;
                     d.target.clear();
                     emit playbackTargetChanged(d.target);
                 }
@@ -128,7 +128,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
         }
     }
 
-    if (d.playback && d.channel) {
+    if (d.playback && d.buffer) {
         switch (message->type()) {
         case IrcMessage::Private:
             return processMessage(static_cast<IrcPrivateMessage*>(message));
@@ -185,7 +185,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
                 }
                 if (tmp) {
                     tmp->setTimeStamp(timeStamp);
-                    QMetaObject::invokeMethod(d.channel, "messageReceived", Q_ARG(IrcMessage*, tmp));
+                    QMetaObject::invokeMethod(d.buffer, "messageReceived", Q_ARG(IrcMessage*, tmp));
                     tmp->deleteLater();
                     return true;
                 }

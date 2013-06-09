@@ -18,18 +18,18 @@
 #include <QStringList>
 #include <QSortFilterProxyModel>
 
-class IrcChannel;
+class IrcBuffer;
 
 class SortedUserModel : public QSortFilterProxyModel
 {
     Q_OBJECT
-    Q_PROPERTY(IrcChannel* channel READ channel WRITE setChannel)
+    Q_PROPERTY(IrcBuffer* buffer READ buffer WRITE setBuffer)
 
 public:
     explicit SortedUserModel(QObject* parent = 0);
 
-    IrcChannel* channel() const;
-    void setChannel(IrcChannel* channel);
+    IrcBuffer* buffer() const;
+    void setBuffer(IrcBuffer* buffer);
 
 protected:
     bool lessThan(const QModelIndex& left, const QModelIndex& right) const;

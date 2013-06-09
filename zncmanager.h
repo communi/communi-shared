@@ -17,7 +17,7 @@
 
 #include <QObject>
 #include <QElapsedTimer>
-#include <IrcChannelModel>
+#include <IrcBufferModel>
 #include <IrcMessageFilter>
 
 class IrcNoticeMessage;
@@ -28,7 +28,7 @@ class ZncManager : public QObject, public IrcMessageFilter
     Q_OBJECT
     Q_PROPERTY(bool playbackActive READ isPlaybackActive NOTIFY playbackActiveChanged)
     Q_PROPERTY(QString playbackTarget READ playbackTarget NOTIFY playbackTargetChanged)
-    Q_PROPERTY(IrcChannelModel* model READ model WRITE setModel NOTIFY modelChanged)
+    Q_PROPERTY(IrcBufferModel* model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QString timeStampFormat READ timeStampFormat WRITE setTimeStampFormat NOTIFY timeStampFormatChanged)
 
 public:
@@ -38,8 +38,8 @@ public:
     bool isPlaybackActive() const;
     QString playbackTarget() const;
 
-    IrcChannelModel* model() const;
-    void setModel(IrcChannelModel* model);
+    IrcBufferModel* model() const;
+    void setModel(IrcBufferModel* model);
 
     QString timeStampFormat() const;
     void setTimeStampFormat(const QString& format);
@@ -48,7 +48,7 @@ public:
 
 signals:
     void playbackActiveChanged(bool active);
-    void modelChanged(IrcChannelModel* model);
+    void modelChanged(IrcBufferModel* model);
     void playbackTargetChanged(const QString& target);
     void timeStampFormatChanged(const QString& format);
 
@@ -65,8 +65,8 @@ private:
         bool playback;
         long timestamp;
         QString target;
-        IrcChannel* channel;
-        IrcChannelModel* model;
+        IrcBuffer* buffer;
+        IrcBufferModel* model;
         QString timeStampFormat;
         QElapsedTimer timestamper;
     } d;
