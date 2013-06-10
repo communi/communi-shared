@@ -36,7 +36,7 @@ void SortedUserModel::setBuffer(IrcBuffer* buffer)
     static_cast<IrcUserModel*>(sourceModel())->setBuffer(buffer);
 
     if (buffer) {
-        m_prefixes = IrcSessionInfo(buffer->model()->session()).prefixes();
+        m_prefixes = IrcSessionInfo(buffer->session()).prefixes();
         sort(0, Qt::AscendingOrder);
     }
 }
