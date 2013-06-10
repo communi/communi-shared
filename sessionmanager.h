@@ -21,11 +21,13 @@
 
 class IrcSession;
 class IrcCommand;
+class IrcBufferModel;
 
 class SessionManager : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(IrcSession* session READ session WRITE setSession NOTIFY sessionChanged)
+    Q_PROPERTY(IrcBufferModel* model READ model CONSTANT)
     Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged)
     Q_PROPERTY(int reconnectDelay READ reconnectDelay WRITE setReconnectDelay)
     Q_PROPERTY(bool reconnecting READ isReconnecting NOTIFY reconnectingChanged)
@@ -37,6 +39,8 @@ public:
 
     IrcSession* session() const;
     void setSession(IrcSession* session);
+
+    IrcBufferModel* model() const;
 
     QString displayName() const;
     void setDisplayName(const QString& name);
@@ -81,6 +85,7 @@ private:
         QString password;
         QString displayName;
         IrcSession* session;
+        IrcBufferModel* model;
         QTimer reconnectTimer;
         QStringList alternateNicks;
     } d;

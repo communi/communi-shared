@@ -15,14 +15,18 @@
 #include "sessionmanager.h"
 #include <QCoreApplication>
 #include <IrcSessionInfo>
+#include <IrcBufferModel>
 #include <IrcSession>
 #include <IrcCommand>
+#include <IrcBuffer>
 
 SessionManager::SessionManager(QObject* parent) : QObject(parent)
 {
     d.session = 0;
     d.enabled = true;
     setReconnectDelay(15);
+
+    d.model = new IrcBufferModel(this);
     setSession(qobject_cast<IrcSession*>(parent));
 
     connect(&d.reconnectTimer, SIGNAL(timeout()), this, SLOT(reconnect()));
@@ -53,8 +57,16 @@ void SessionManager::setSession(IrcSession* session)
             connect(session, SIGNAL(capabilities(QStringList, QStringList*)), this, SLOT(onCapabilities(QStringList, QStringList*)));
         }
         d.session = session;
+        d.model->setSession(session);
+        IrcBuffer* buffer = d.model->addBuffer(QString());
+        connect(d.model, SIGNAL(messageIgnored(IrcMessage*)), buffer, SIGNAL(messageReceived(IrcMessage*)));
         emit sessionChanged(session);
     }
+}
+
+IrcBufferModel* SessionManager::model() const
+{
+    return d.model;
 }
 
 QString SessionManager::displayName() const
