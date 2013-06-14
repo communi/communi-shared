@@ -20,6 +20,7 @@
 class IrcUser;
 class IrcBuffer;
 class IrcMessage;
+class IrcUserModel;
 
 class UserActivityModel : public QSortFilterProxyModel
 {
@@ -36,12 +37,15 @@ protected:
     bool lessThan(const QModelIndex& left, const QModelIndex& right) const;
 
 private slots:
-    void onUserAdded(IrcUser* user);
     void onUserRemoved(IrcUser* user);
-    void onUserMessageReceived(IrcMessage* message);
+    void onMessageReceived(IrcMessage* message);
 
 private:
-    QHash<const IrcUser*, int> m_users;
+    struct Private {
+        qint64 counter;
+        IrcUserModel* userModel;
+        QHash<const IrcUser*, qint64> users;
+    } d;
 };
 
 #endif // USERACTIVITYMODEL_H

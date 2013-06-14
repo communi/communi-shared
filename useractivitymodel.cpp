@@ -14,65 +14,60 @@
 
 #include "useractivitymodel.h"
 #include <IrcUserModel>
+#include <IrcMessage>
 #include <IrcBuffer>
 #include <IrcUser>
 
 UserActivityModel::UserActivityModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
-    IrcUserModel* userModel = new IrcUserModel(this);
-    connect(userModel, SIGNAL(userAdded(IrcUser*)), this, SLOT(onUserAdded(IrcUser*)));
-    connect(userModel, SIGNAL(userRemoved(IrcUser*)), this, SLOT(onUserRemoved(IrcUser*)));
-    setSourceModel(userModel);
+    d.counter = 0;
+    d.userModel = new IrcUserModel(this);
 
+    setSourceModel(d.userModel);
+    connect(d.userModel, SIGNAL(userRemoved(IrcUser*)), this, SLOT(onUserRemoved(IrcUser*)));
     setBuffer(qobject_cast<IrcBuffer*>(parent));
     sort(0, Qt::DescendingOrder);
 }
 
 IrcBuffer* UserActivityModel::buffer() const
 {
-    return static_cast<IrcUserModel*>(sourceModel())->buffer();
+    return d.userModel->buffer();
 }
 
 void UserActivityModel::setBuffer(IrcBuffer* buffer)
 {
-    IrcUserModel* userModel = static_cast<IrcUserModel*>(sourceModel());
+    if (buffer != d.userModel->buffer()) {
+        if (d.userModel->buffer())
+            disconnect(d.userModel->buffer(), SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
 
-    foreach (IrcUser* user, userModel->users())
-        disconnect(user, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onUserMessageReceived(IrcMessage*)));
+        d.users.clear();
+        d.userModel->setBuffer(buffer);
 
-    userModel->setBuffer(buffer);
-
-    foreach (IrcUser* user, userModel->users())
-        connect(user, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onUserMessageReceived(IrcMessage*)));
-
-    m_users.clear();
-    invalidate();
+        if (buffer)
+            connect(buffer, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
+    }
 }
 
 bool UserActivityModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
 {
     const IrcUser* u1 = left.data(Irc::UserRole).value<IrcUser*>();
     const IrcUser* u2 = right.data(Irc::UserRole).value<IrcUser*>();
-    return m_users.value(u1) < m_users.value(u2);
-}
-
-void UserActivityModel::onUserAdded(IrcUser* user)
-{
-    connect(user, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onUserMessageReceived(IrcMessage*)));
-    m_users.remove(user);
+    return d.users.value(u1) < d.users.value(u2);
 }
 
 void UserActivityModel::onUserRemoved(IrcUser* user)
 {
-    disconnect(user, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onUserMessageReceived(IrcMessage*)));
-    m_users.remove(user);
+    d.users.remove(user);
 }
 
-void UserActivityModel::onUserMessageReceived(IrcMessage* message)
+void UserActivityModel::onMessageReceived(IrcMessage* message)
 {
-    Q_UNUSED(message);
-    if (IrcUser* user = qobject_cast<IrcUser*>(sender())) {
-        ++m_users[user];
+    QString name = message->sender().name();
+    if (message->type() == IrcMessage::Nick)
+        name = static_cast<IrcNickMessage*>(message)->nick();
+
+    if (IrcUser* user = d.userModel->user(name)) {
+        d.users[user] = ++d.counter;
         invalidate();
     }
 }
