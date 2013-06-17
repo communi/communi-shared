@@ -15,7 +15,7 @@
 #include "useractivitymodel.h"
 #include <IrcUserModel>
 #include <IrcMessage>
-#include <IrcBuffer>
+#include <IrcChannel>
 #include <IrcUser>
 
 UserActivityModel::UserActivityModel(QObject* parent) : QSortFilterProxyModel(parent)
@@ -25,26 +25,26 @@ UserActivityModel::UserActivityModel(QObject* parent) : QSortFilterProxyModel(pa
 
     setSourceModel(d.userModel);
     connect(d.userModel, SIGNAL(userRemoved(IrcUser*)), this, SLOT(onUserRemoved(IrcUser*)));
-    setBuffer(qobject_cast<IrcBuffer*>(parent));
+    setChannel(qobject_cast<IrcChannel*>(parent));
     sort(0, Qt::DescendingOrder);
 }
 
-IrcBuffer* UserActivityModel::buffer() const
+IrcChannel* UserActivityModel::channel() const
 {
-    return d.userModel->buffer();
+    return d.userModel->channel();
 }
 
-void UserActivityModel::setBuffer(IrcBuffer* buffer)
+void UserActivityModel::setChannel(IrcChannel* channel)
 {
-    if (buffer != d.userModel->buffer()) {
-        if (d.userModel->buffer())
-            disconnect(d.userModel->buffer(), SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
+    if (channel != d.userModel->channel()) {
+        if (d.userModel->channel())
+            disconnect(d.userModel->channel(), SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
 
         d.users.clear();
-        d.userModel->setBuffer(buffer);
+        d.userModel->setChannel(channel);
 
-        if (buffer)
-            connect(buffer, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
+        if (channel)
+            connect(channel, SIGNAL(messageReceived(IrcMessage*)), this, SLOT(onMessageReceived(IrcMessage*)));
     }
 }
 

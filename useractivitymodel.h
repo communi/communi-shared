@@ -18,20 +18,20 @@
 #include <QSortFilterProxyModel>
 
 class IrcUser;
-class IrcBuffer;
+class IrcChannel;
 class IrcMessage;
 class IrcUserModel;
 
 class UserActivityModel : public QSortFilterProxyModel
 {
     Q_OBJECT
-    Q_PROPERTY(IrcBuffer* buffer READ buffer WRITE setBuffer)
+    Q_PROPERTY(IrcChannel* channel READ channel WRITE setChannel)
 
 public:
     explicit UserActivityModel(QObject* parent = 0);
 
-    IrcBuffer* buffer() const;
-    void setBuffer(IrcBuffer* buffer);
+    IrcChannel* channel() const;
+    void setChannel(IrcChannel* channel);
 
 protected:
     bool lessThan(const QModelIndex& left, const QModelIndex& right) const;
