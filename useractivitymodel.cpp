@@ -24,7 +24,7 @@ UserActivityModel::UserActivityModel(QObject* parent) : QSortFilterProxyModel(pa
     d.userModel = new IrcUserModel(this);
 
     setSourceModel(d.userModel);
-    connect(d.userModel, SIGNAL(userRemoved(IrcUser*)), this, SLOT(onUserRemoved(IrcUser*)));
+    connect(d.userModel, SIGNAL(removed(IrcUser*)), this, SLOT(onUserRemoved(IrcUser*)));
     setChannel(qobject_cast<IrcChannel*>(parent));
     sort(0, Qt::DescendingOrder);
 }

@@ -58,7 +58,7 @@ void SessionManager::setSession(IrcSession* session)
         }
         d.session = session;
         d.model->setSession(session);
-        IrcBuffer* buffer = d.model->addBuffer(QString());
+        IrcBuffer* buffer = d.model->add(QString());
         connect(d.model, SIGNAL(messageIgnored(IrcMessage*)), buffer, SIGNAL(messageReceived(IrcMessage*)));
         emit sessionChanged(session);
     }
