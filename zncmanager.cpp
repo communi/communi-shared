@@ -181,7 +181,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
                     QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "KICK", QStringList() << message->target() << tokens.value(2) << reason, message->session());
+                    tmp = IrcMessage::fromParameters(sender.prefix(), "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->session());
                 }
                 if (tmp) {
                     tmp->setTimeStamp(timeStamp);
