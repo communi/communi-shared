@@ -161,7 +161,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
                 } else if (content.startsWith("parted")) {
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "PART", QStringList() << reason , message->session());
+                    tmp = IrcMessage::fromParameters(sender.prefix(), "PART", QStringList() << message->target() << reason , message->session());
                 } else if (content.startsWith("quit")) {
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
