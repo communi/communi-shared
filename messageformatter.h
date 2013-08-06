@@ -62,6 +62,8 @@ protected:
     static QString formatUser(const QString& user, bool strip = true);
 
     static QString formatIdleTime(int secs);
+
+    static QString formatNames(const QStringList& names, int columns = 6);
 };
 
 #endif // MESSAGEFORMATTER_H

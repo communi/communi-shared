@@ -138,9 +138,11 @@ QString MessageFormatter::formatModeMessage(IrcModeMessage* message, const Optio
 
 QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, const Options& options)
 {
-    if (!options.repeat && !message->names().isEmpty())
+    if (!options.repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 has %2 users").arg(message->channel()).arg(message->names().count());
-    return QString();
+    QStringList names = message->names();
+    qSort(names);
+    return QCoreApplication::translate("MessageFormatter", "! %1 has %3 users: %2").arg(message->channel(), formatNames(names)).arg(names.count());
 }
 
 QString MessageFormatter::formatNickMessage(IrcNickMessage* message, const Options& options)
@@ -387,4 +389,22 @@ QString MessageFormatter::formatHtml(const QString& message, const Options& opti
         }
     }
     return msg;
+}
+
+QString MessageFormatter::formatNames(const QStringList &names, int columns)
+{
+    QString message;
+    message += "<table>";
+    for (int i = 0; i < names.count(); i += columns)
+    {
+        message += "<tr>";
+        for (int j = 0; j < columns; ++j) {
+            IrcSender sender;
+            sender.setName(names.value(i+j));
+            message += "<td>" + formatSender(sender) + "&nbsp;</td>";
+        }
+        message += "</tr>";
+    }
+    message += "</table>";
+    return message;
 }
