@@ -43,7 +43,7 @@ CommandParser::CommandParser(QObject* parent) : IrcCommandParser(parent)
     addCommand(IrcCommand::Trace, "TRACE (<target>)");
     addCommand(IrcCommand::Users, "USERS (<server>)");
     addCommand(IrcCommand::Version, "VERSION (<user>)");
-    addCommand(IrcCommand::Who, "WHO <user>");
+    addCommand(IrcCommand::Who, "WHO <mask>");
     addCommand(IrcCommand::Whois, "WHOIS <user>");
     addCommand(IrcCommand::Whowas, "WHOWAS <user>");
 
