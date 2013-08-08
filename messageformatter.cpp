@@ -81,7 +81,7 @@ QString MessageFormatter::formatLine(const QString& message, const Options& opti
     if (formatted.isEmpty())
         return QString();
 
-    QString cls = "message";
+    QString cls;
     if (options.highlight) {
         cls = "highlight";
     } else {
@@ -97,7 +97,9 @@ QString MessageFormatter::formatLine(const QString& message, const Options& opti
     if (!options.timeStampFormat.isEmpty())
         formatted = QCoreApplication::translate("MessageFormatter", "<span class='timestamp'>%1</span> %3").arg(options.timeStamp.time().toString(options.timeStampFormat), formatted);
 
-    return QCoreApplication::translate("MessageFormatter", "<span class='%1'>%2</span>").arg(cls, formatted);
+    if (!cls.isEmpty())
+        return QCoreApplication::translate("MessageFormatter", "<span class='%1'>%2</span>").arg(cls, formatted);
+    return formatted;
 }
 
 QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, const Options& options)
