@@ -48,6 +48,7 @@ CommandParser::CommandParser(QObject* parent) : IrcCommandParser(parent)
     addCommand(IrcCommand::Whowas, "WHOWAS <user>");
 
     addCommand(IrcCommand::Custom, "CLEAR");
+    addCommand(IrcCommand::Custom, "CLOSE");
     addCommand(IrcCommand::Custom, "QUERY <user>");
     addCommand(IrcCommand::Custom, "MSG <user/channel> <message...>");
 }
