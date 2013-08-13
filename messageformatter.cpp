@@ -343,11 +343,7 @@ QString MessageFormatter::formatSender(const IrcSender& sender, bool strip)
 {
     QString name = sender.name();
     if (sender.isValid()) {
-        // http://ethanschoonover.com/solarized
-        static const QList<QColor> colors = QList<QColor>()
-                << QColor("#b58900") << QColor("#cb4b16") << QColor("#dc322f") << QColor("#d33682")
-                << QColor("#6c71c4") << QColor("#268bd2") << QColor("#2aa198") << QColor("#859900");
-        QColor color = colors.at(qHash(name) % 8);
+        QColor color = QColor::fromHsl(qHash(name) % 359, 102, 116);
         name = QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(color.name()).arg(name);
         if (!strip && !sender.user().isEmpty() && !sender.host().isEmpty())
             name = QString("%1 (%2@%3)").arg(name, sender.user(), sender.host());
