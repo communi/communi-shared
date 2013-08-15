@@ -27,6 +27,7 @@
 
 #include "messageformatter.h"
 #include <irctextformat.h>
+#include <ircsession.h>
 #include <ircsender.h>
 #include <irc.h>
 #include <QHash>
@@ -124,7 +125,7 @@ QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, const O
 
 QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender(), options.stripNicks);
+    const QString sender = formatSender(message->sender(), options.stripNicks, message->flags() & IrcMessage::Own);
     if (message->flags() & IrcMessage::Own && options.repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 rejoined %2").arg(sender, message->channel());
     else
@@ -134,8 +135,8 @@ QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, const Optio
 QString MessageFormatter::formatKickMessage(IrcKickMessage* message, const Options& options)
 {
     Q_UNUSED(options);
-    const QString sender = formatSender(message->sender());
-    const QString user = formatUser(message->user());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
+    const QString user = formatUser(message->user(), true, !message->user().compare(message->session()->nickName()));
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2 (%3)").arg(sender, user, message->reason());
     else
@@ -144,7 +145,7 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, const Optio
 
 QString MessageFormatter::formatModeMessage(IrcModeMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
     if (message->isReply())
         return !options.repeat ? QCoreApplication::translate("MessageFormatter", "! %1 mode is %2 %3").arg(message->target(), message->mode(), message->argument()) : QString();
     else
@@ -163,8 +164,8 @@ QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, const Opt
 QString MessageFormatter::formatNickMessage(IrcNickMessage* message, const Options& options)
 {
     Q_UNUSED(options);
-    const QString sender = formatSender(message->sender());
-    const QString nick = formatUser(message->nick());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
+    const QString nick = formatUser(message->nick(), true, message->flags() & IrcMessage::Own);
     return QCoreApplication::translate("MessageFormatter", "! %1 changed nick to %2").arg(sender, nick);
 }
 
@@ -182,7 +183,7 @@ QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, const O
             return QCoreApplication::translate("MessageFormatter", "! %1 version is %2").arg(formatSender(message->sender()), QStringList(params.mid(1)).join(" "));
     }
 
-    const QString sender = formatSender(message->sender());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
     const QString msg = formatHtml(message->message(), options);
     return QCoreApplication::translate("MessageFormatter", "[%1] %2").arg(sender, msg);
 }
@@ -273,7 +274,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, const
 
 QString MessageFormatter::formatPartMessage(IrcPartMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender(), options.stripNicks);
+    const QString sender = formatSender(message->sender(), options.stripNicks, message->flags() & IrcMessage::Own);
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 parted %2 (%3)").arg(sender, message->channel(), formatHtml(message->reason(), options));
     else
@@ -288,7 +289,7 @@ QString MessageFormatter::formatPongMessage(IrcPongMessage* message, const Optio
 
 QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
     const QString msg = formatHtml(message->message(), options);
     if (message->isAction())
         return QCoreApplication::translate("MessageFormatter", "* %1 %2").arg(sender, msg);
@@ -300,7 +301,7 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, const
 
 QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender(), options.stripNicks);
+    const QString sender = formatSender(message->sender(), options.stripNicks, message->flags() & IrcMessage::Own);
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 has quit (%2)").arg(sender, formatHtml(message->reason(), options));
     else
@@ -309,7 +310,7 @@ QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, const Optio
 
 QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, const Options& options)
 {
-    const QString sender = formatSender(message->sender());
+    const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
     const QString topic = formatHtml(message->topic(), options);
     const QString channel = message->channel();
     if (message->isReply()) {
@@ -339,11 +340,11 @@ QString MessageFormatter::formatPingReply(const IrcSender& sender, const QString
     return QString();
 }
 
-QString MessageFormatter::formatSender(const IrcSender& sender, bool strip)
+QString MessageFormatter::formatSender(const IrcSender& sender, bool strip, bool own)
 {
     QString name = sender.name();
     if (sender.isValid()) {
-        QColor color = QColor::fromHsl(qHash(name) % 359, 102, 116);
+        QColor color = QColor::fromHsl(qHash(name) % 359, (own ? 0 : 102), 116);
         name = QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(color.name()).arg(name);
         if (!strip && !sender.user().isEmpty() && !sender.host().isEmpty())
             name = QString("%1 (%2@%3)").arg(name, sender.user(), sender.host());
@@ -351,9 +352,9 @@ QString MessageFormatter::formatSender(const IrcSender& sender, bool strip)
     return name;
 }
 
-QString MessageFormatter::formatUser(const QString& user, bool strip)
+QString MessageFormatter::formatUser(const QString& user, bool strip, bool own)
 {
-    return formatSender(IrcSender(user), strip);
+    return formatSender(IrcSender(user), strip, own);
 }
 
 QString MessageFormatter::formatIdleTime(int secs)

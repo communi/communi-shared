@@ -71,8 +71,8 @@ protected:
 
     static QString formatPingReply(const IrcSender& sender, const QString& arg);
 
-    static QString formatSender(const IrcSender& sender, bool strip = true);
-    static QString formatUser(const QString& user, bool strip = true);
+    static QString formatSender(const IrcSender& sender, bool strip = true, bool own = false);
+    static QString formatUser(const QString& user, bool strip = true, bool own = false);
 
     static QString formatIdleTime(int secs);
 
