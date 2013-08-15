@@ -27,7 +27,7 @@
 
 #include "messageformatter.h"
 #include <irctextformat.h>
-#include <ircsession.h>
+#include <ircconnection.h>
 #include <ircsender.h>
 #include <irc.h>
 #include <QHash>
@@ -136,7 +136,7 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, const Optio
 {
     Q_UNUSED(options);
     const QString sender = formatSender(message->sender(), true, message->flags() & IrcMessage::Own);
-    const QString user = formatUser(message->user(), true, !message->user().compare(message->session()->nickName()));
+    const QString user = formatUser(message->user(), true, !message->user().compare(message->connection()->nickName()));
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2 (%3)").arg(sender, user, message->reason());
     else

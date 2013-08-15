@@ -26,11 +26,11 @@
 */
 
 #include "sortedusermodel.h"
-#include <IrcSessionInfo>
 #include <IrcBufferModel>
+#include <IrcConnection>
 #include <IrcUserModel>
-#include <IrcSession>
 #include <IrcChannel>
+#include <IrcNetwork>
 
 SortedUserModel::SortedUserModel(QObject* parent) : QSortFilterProxyModel(parent)
 {
@@ -49,7 +49,7 @@ void SortedUserModel::setChannel(IrcChannel* channel)
     static_cast<IrcUserModel*>(sourceModel())->setChannel(channel);
 
     if (channel) {
-        m_prefixes = IrcSessionInfo(channel->session()).prefixes();
+        m_prefixes = channel->connection()->network()->prefixes();
         sort(0, Qt::AscendingOrder);
     }
 }

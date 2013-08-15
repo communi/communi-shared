@@ -32,14 +32,14 @@
 #include <QObject>
 #include <QStringList>
 
-class IrcSession;
+class IrcConnection;
 class IrcCommand;
 class IrcBufferModel;
 
 class SessionManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(IrcSession* session READ session WRITE setSession NOTIFY sessionChanged)
+    Q_PROPERTY(IrcConnection* connection READ connection WRITE setSession NOTIFY sessionChanged)
     Q_PROPERTY(IrcBufferModel* model READ model CONSTANT)
     Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged)
     Q_PROPERTY(int reconnectDelay READ reconnectDelay WRITE setReconnectDelay)
@@ -50,8 +50,8 @@ class SessionManager : public QObject
 public:
     explicit SessionManager(QObject* parent = 0);
 
-    IrcSession* session() const;
-    void setSession(IrcSession* session);
+    IrcConnection* connection() const;
+    void setSession(IrcConnection* connection);
 
     IrcBufferModel* model() const;
 
@@ -80,7 +80,7 @@ public slots:
     void wake();
 
 signals:
-    void sessionChanged(IrcSession* session);
+    void sessionChanged(IrcConnection* connection);
     void displayNameChanged(const QString& name);
     void reconnectingChanged(bool reconnecting);
     bool enabledChanged(bool enabled);
@@ -97,7 +97,7 @@ private:
         bool enabled;
         QString password;
         QString displayName;
-        IrcSession* session;
+        IrcConnection* connection;
         IrcBufferModel* model;
         QTimer reconnectTimer;
         QStringList alternateNicks;

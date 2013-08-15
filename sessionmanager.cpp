@@ -27,53 +27,53 @@
 
 #include "sessionmanager.h"
 #include <QCoreApplication>
-#include <IrcSessionInfo>
 #include <IrcBufferModel>
-#include <IrcSession>
+#include <IrcConnection>
+#include <IrcNetwork>
 #include <IrcCommand>
 #include <IrcBuffer>
 
 SessionManager::SessionManager(QObject* parent) : QObject(parent)
 {
-    d.session = 0;
+    d.connection = 0;
     d.enabled = true;
     setReconnectDelay(15);
 
     d.model = new IrcBufferModel(this);
-    setSession(qobject_cast<IrcSession*>(parent));
+    setSession(qobject_cast<IrcConnection*>(parent));
 
     connect(&d.reconnectTimer, SIGNAL(timeout()), this, SLOT(reconnect()));
 }
 
-IrcSession* SessionManager::session() const
+IrcConnection* SessionManager::connection() const
 {
-    return d.session;
+    return d.connection;
 }
 
-void SessionManager::setSession(IrcSession* session)
+void SessionManager::setSession(IrcConnection* connection)
 {
-    if (d.session != session) {
-        if (d.session) {
-            disconnect(d.session, SIGNAL(connected()), this, SLOT(onConnected()));
-            disconnect(d.session, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-            disconnect(d.session, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(onDisconnected()));
-            disconnect(d.session, SIGNAL(password(QString*)), this, SLOT(onPassword(QString*)));
-            disconnect(d.session, SIGNAL(nickNameReserved(QString*)), this, SLOT(onNickNameReserved(QString*)));
-            disconnect(d.session, SIGNAL(capabilities(QStringList, QStringList*)), this, SLOT(onCapabilities(QStringList, QStringList*)));
+    if (d.connection != connection) {
+        if (d.connection) {
+            disconnect(d.connection, SIGNAL(connected()), this, SLOT(onConnected()));
+            disconnect(d.connection, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+            disconnect(d.connection, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(onDisconnected()));
+            disconnect(d.connection, SIGNAL(password(QString*)), this, SLOT(onPassword(QString*)));
+            disconnect(d.connection, SIGNAL(nickNameReserved(QString*)), this, SLOT(onNickNameReserved(QString*)));
+            disconnect(d.connection, SIGNAL(capabilities(QStringList, QStringList*)), this, SLOT(onCapabilities(QStringList, QStringList*)));
         }
-        if (session) {
-            connect(session, SIGNAL(connected()), this, SLOT(onConnected()));
-            connect(session, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-            connect(session, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(onDisconnected()));
-            connect(session, SIGNAL(password(QString*)), this, SLOT(onPassword(QString*)));
-            connect(session, SIGNAL(nickNameReserved(QString*)), this, SLOT(onNickNameReserved(QString*)));
-            connect(session, SIGNAL(capabilities(QStringList, QStringList*)), this, SLOT(onCapabilities(QStringList, QStringList*)));
+        if (connection) {
+            connect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
+            connect(connection, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
+            connect(connection, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(onDisconnected()));
+            connect(connection, SIGNAL(password(QString*)), this, SLOT(onPassword(QString*)));
+            connect(connection, SIGNAL(nickNameReserved(QString*)), this, SLOT(onNickNameReserved(QString*)));
+            connect(connection, SIGNAL(capabilities(QStringList, QStringList*)), this, SLOT(onCapabilities(QStringList, QStringList*)));
         }
-        d.session = session;
-        d.model->setSession(session);
+        d.connection = connection;
+        d.model->setConnection(connection);
         IrcBuffer* buffer = d.model->add(QString());
         connect(d.model, SIGNAL(messageIgnored(IrcMessage*)), buffer, SIGNAL(messageReceived(IrcMessage*)));
-        emit sessionChanged(session);
+        emit sessionChanged(connection);
     }
 }
 
@@ -135,16 +135,16 @@ bool SessionManager::isReconnecting() const
 
 bool SessionManager::sendCommand(IrcCommand* command)
 {
-    return d.session->sendCommand(command);
+    return d.connection->sendCommand(command);
 }
 
 void SessionManager::reconnect()
 {
     d.enabled = true;
-    if (!d.session->isActive()) {
+    if (!d.connection->isActive()) {
         d.reconnectTimer.stop();
         emit reconnectingChanged(false);
-        d.session->open();
+        d.connection->open();
     }
 }
 
@@ -156,12 +156,12 @@ void SessionManager::quit()
 
 void SessionManager::destructLater()
 {
-    if (d.session->isConnected()) {
-        connect(d.session, SIGNAL(disconnected()), d.session, SLOT(deleteLater()));
-        connect(d.session, SIGNAL(socketError(QAbstractSocket::SocketError)), d.session, SLOT(deleteLater()));
-        QTimer::singleShot(1000, d.session, SLOT(deleteLater()));
+    if (d.connection->isConnected()) {
+        connect(d.connection, SIGNAL(disconnected()), d.connection, SLOT(deleteLater()));
+        connect(d.connection, SIGNAL(socketError(QAbstractSocket::SocketError)), d.connection, SLOT(deleteLater()));
+        QTimer::singleShot(1000, d.connection, SLOT(deleteLater()));
     } else {
-        d.session->deleteLater();
+        d.connection->deleteLater();
     }
 }
 
@@ -176,13 +176,12 @@ void SessionManager::sleep()
     QString message = tr("%1 %2").arg(QCoreApplication::applicationName())
                                  .arg(QCoreApplication::applicationVersion());
 
-    if (d.session->isConnected()) {
-        IrcSessionInfo info(d.session);
-        if (info.activeCapabilities().contains("communi"))
-            d.session->sendCommand(IrcCommand::createCtcpRequest("*communi", "TIME"));
-        d.session->sendCommand(IrcCommand::createQuit(message));
+    if (d.connection->isConnected()) {
+        if (d.connection->network()->activeCapabilities().contains("communi"))
+            d.connection->sendCommand(IrcCommand::createCtcpRequest("*communi", "TIME"));
+        d.connection->sendCommand(IrcCommand::createQuit(message));
     } else {
-        d.session->close();
+        d.connection->close();
     }
 }
 
@@ -212,7 +211,7 @@ void SessionManager::onPassword(QString* password)
 void SessionManager::onNickNameReserved(QString* alternate)
 {
     if (d.alternateNicks.isEmpty()) {
-        QString currentNick = d.session->nickName();
+        QString currentNick = d.connection->nickName();
         d.alternateNicks << (currentNick + "_")
                          <<  currentNick
                          << (currentNick + "__")
