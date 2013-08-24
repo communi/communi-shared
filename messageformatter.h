@@ -38,7 +38,7 @@ class MessageFormatter : public QObject
 public:
     struct Options
     {
-        Options() : repeat(false), highlight(false), stripNicks(false) { }
+        Options() : repeat(false), highlight(false), stripNicks(false), textFormat(0) { }
         bool repeat;
         bool highlight;
         bool stripNicks;
@@ -46,7 +46,7 @@ public:
         QStringList users;
         QDateTime timeStamp;
         QString timeStampFormat;
-        IrcTextFormat textFormat;
+        IrcTextFormat* textFormat;
     };
 
     Q_INVOKABLE static QString formatMessage(IrcMessage* message, const Options& options = Options());
@@ -69,10 +69,10 @@ protected:
     static QString formatTopicMessage(IrcTopicMessage* message, const Options& options);
     static QString formatUnknownMessage(IrcMessage* message, const Options& options);
 
-    static QString formatPingReply(const IrcSender& sender, const QString& arg);
+    static QString formatPingReply(const QString& nick, const QString& arg);
 
-    static QString formatSender(const IrcSender& sender, bool strip = true, bool own = false);
-    static QString formatUser(const QString& user, bool strip = true, bool own = false);
+    static QString formatNick(const QString& nick, bool own = false);
+    static QString formatPrefix(const QString& prefix, bool strip = true, bool own = false);
 
     static QString formatIdleTime(int secs);
 

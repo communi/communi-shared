@@ -75,11 +75,11 @@ void UserActivityModel::onUserRemoved(IrcUser* user)
 
 void UserActivityModel::onMessageReceived(IrcMessage* message)
 {
-    QString name = message->sender().name();
+    QString nick = message->nick();
     if (message->type() == IrcMessage::Nick)
-        name = static_cast<IrcNickMessage*>(message)->nick();
+        nick = static_cast<IrcNickMessage*>(message)->newNick();
 
-    if (IrcUser* user = d.userModel->user(name)) {
+    if (IrcUser* user = d.userModel->user(nick)) {
         d.users[user] = ++d.counter;
         invalidate();
     }

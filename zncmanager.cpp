@@ -29,7 +29,6 @@
 #include <ircconnection.h>
 #include <ircmessage.h>
 #include <ircbuffer.h>
-#include <ircsender.h>
 
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
@@ -105,8 +104,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
     }
 
     if (message->type() == IrcMessage::Private) {
-        IrcSender sender = message->sender();
-        if (sender.name() == QLatin1String("***") && sender.user() == QLatin1String("znc")) {
+        if (message->nick() == QLatin1String("***") && message->ident() == QLatin1String("znc")) {
             IrcPrivateMessage* privMsg = static_cast<IrcPrivateMessage*>(message);
             QString content = privMsg->message();
             if (content == QLatin1String("Buffer Playback...")) {
@@ -134,7 +132,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
             }
         }
     } else if (message->type() == IrcMessage::Notice) {
-        if (message->sender().name() == "*communi") {
+        if (message->nick() == "*communi") {
             d.timestamp = static_cast<IrcNoticeMessage*>(message)->message().toLong();
             d.timestamper.restart();
             return true;
@@ -163,38 +161,38 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
         if (timeStamp.isValid()) {
             msg.remove(0, idx + 1);
 
-            if (message->sender().name() == "*buffextras") {
+            if (message->nick() == "*buffextras") {
                 idx = msg.indexOf(" ");
-                IrcSender sender(msg.left(idx));
+                QString prefix = msg.left(idx);
                 QString content = msg.mid(idx + 1);
 
                 IrcMessage* tmp = 0;
                 if (content.startsWith("joined")) {
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "JOIN", QStringList() << message->target(), message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "JOIN", QStringList() << message->target(), message->connection());
                 } else if (content.startsWith("parted")) {
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "PART", QStringList() << message->target() << reason , message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "PART", QStringList() << message->target() << reason , message->connection());
                 } else if (content.startsWith("quit")) {
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "QUIT", QStringList() << reason , message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "QUIT", QStringList() << reason , message->connection());
                 } else if (content.startsWith("is")) {
                     QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "NICK", QStringList() << tokens.last() , message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "NICK", QStringList() << tokens.last() , message->connection());
                 } else if (content.startsWith("set")) {
                     QStringList tokens = content.split(" ", QString::SkipEmptyParts);
                     QString user = tokens.takeLast();
                     QString mode = tokens.takeLast();
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "MODE", QStringList() << message->target() << mode << user, message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "MODE", QStringList() << message->target() << mode << user, message->connection());
                 } else if (content.startsWith("changed")) {
                     QString topic = content.mid(content.indexOf(":") + 2);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "TOPIC", QStringList() << message->target() << topic, message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "TOPIC", QStringList() << message->target() << topic, message->connection());
                 } else if (content.startsWith("kicked")) {
                     QString reason = content.mid(content.indexOf("[") + 1);
                     reason.chop(1);
                     QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    tmp = IrcMessage::fromParameters(sender.prefix(), "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
+                    tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
                 }
                 if (tmp) {
                     tmp->setTimeStamp(timeStamp);
