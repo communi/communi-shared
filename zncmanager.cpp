@@ -66,14 +66,14 @@ void ZncManager::setModel(IrcBufferModel* model)
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
             disconnect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
-            disconnect(connection, SIGNAL(capabilities(QStringList,QStringList*)), this, SLOT(onCapabilities(QStringList,QStringList*)));
+            disconnect(connection->network(), SIGNAL(availableCapabilitiesChanged(QStringList)), this, SLOT(requestCapabilities(QStringList)));
             connection->removeMessageFilter(this);
         }
         d.model = model;
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
             connect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
-            connect(connection, SIGNAL(capabilities(QStringList,QStringList*)), this, SLOT(onCapabilities(QStringList,QStringList*)));
+            connect(connection->network(), SIGNAL(availableCapabilitiesChanged(QStringList)), this, SLOT(requestCapabilities(QStringList)));
             connection->installMessageFilter(this);
         }
         emit modelChanged(model);
@@ -235,10 +235,10 @@ void ZncManager::onConnected()
     d.timestamper.invalidate();
 }
 
-void ZncManager::onCapabilities(const QStringList& available, QStringList* request)
+void ZncManager::requestCapabilities(const QStringList& available)
 {
     if (available.contains("communi")) {
-        request->append("communi");
-        request->append(QString("communi/%1").arg(d.timestamp));
+        QStringList caps = QStringList() << "communi" << QString("communi/%1").arg(d.timestamp);
+        d.model->network()->requestCapabilities(caps);
     }
 }

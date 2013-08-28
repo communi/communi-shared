@@ -71,7 +71,7 @@ protected:
 
 private slots:
     void onConnected();
-    void onCapabilities(const QStringList& available, QStringList* request);
+    void requestCapabilities(const QStringList& available);
 
 private:
     mutable struct Private {
