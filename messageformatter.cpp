@@ -377,6 +377,8 @@ QString MessageFormatter::formatHtml(const QString& message, const Options& opti
     QString msg = message;
     if (options.textFormat)
         msg = options.textFormat->toHtml(message);
+    else
+        msg = IrcTextFormat().toHtml(message);
 
     for (int i = options.users.count() - 1; i >= 0; --i) {
         const QString& user = options.users.at(i);
