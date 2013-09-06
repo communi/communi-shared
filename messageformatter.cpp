@@ -419,8 +419,12 @@ QString MessageFormatter::formatNames(const QStringList &names, int columns)
     for (int i = 0; i < names.count(); i += columns)
     {
         message += "<tr>";
-        for (int j = 0; j < columns; ++j)
-            message += "<td>" + Irc::nickFromPrefix(names.value(i+j)) + "&nbsp;</td>";
+        for (int j = 0; j < columns; ++j) {
+            QString nick = Irc::nickFromPrefix(names.value(i+j));
+            if (nick.isEmpty())
+                nick = names.value(i+j);
+            message += "<td>" + formatNick(nick) + "&nbsp;</td>";
+        }
         message += "</tr>";
     }
     message += "</table>";
