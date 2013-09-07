@@ -64,6 +64,8 @@ CommandParser::CommandParser(QObject* parent) : IrcCommandParser(parent)
     addCommand(IrcCommand::Custom, "CLOSE");
     addCommand(IrcCommand::Custom, "QUERY <user>");
     addCommand(IrcCommand::Custom, "MSG <user/channel> <message...>");
+    addCommand(IrcCommand::Custom, "IGNORE (<mask>)");
+    addCommand(IrcCommand::Custom, "UNIGNORE <mask>");
 }
 
 QStringList CommandParser::availableCommands() const

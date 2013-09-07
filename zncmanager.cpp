@@ -26,6 +26,7 @@
 */
 
 #include "zncmanager.h"
+#include "ignoremanager.h"
 #include <ircconnection.h>
 #include <ircmessage.h>
 #include <ircbuffer.h>
@@ -196,7 +197,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
                 }
                 if (tmp) {
                     tmp->setTimeStamp(timeStamp);
-                    QMetaObject::invokeMethod(d.buffer, "messageReceived", Q_ARG(IrcMessage*, tmp));
+                    d.buffer->receiveMessage(tmp);
                     tmp->deleteLater();
                     return true;
                 }
@@ -210,7 +211,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
             message->setTimeStamp(timeStamp);
         }
     }
-    return false;
+    return IgnoreManager::instance()->messageFilter(message);
 }
 
 bool ZncManager::processNotice(IrcNoticeMessage* message)
@@ -227,7 +228,7 @@ bool ZncManager::processNotice(IrcNoticeMessage* message)
             message->setParameters(QStringList() << message->target() << msg);
         }
     }
-    return false;
+    return IgnoreManager::instance()->messageFilter(message);
 }
 
 void ZncManager::onConnected()
