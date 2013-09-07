@@ -66,14 +66,14 @@ void ZncManager::setModel(IrcBufferModel* model)
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
             disconnect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
-            disconnect(connection->network(), SIGNAL(availableCapabilitiesChanged(QStringList)), this, SLOT(requestCapabilities(QStringList)));
+            disconnect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->removeMessageFilter(this);
         }
         d.model = model;
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
             connect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
-            connect(connection->network(), SIGNAL(availableCapabilitiesChanged(QStringList)), this, SLOT(requestCapabilities(QStringList)));
+            connect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->installMessageFilter(this);
         }
         emit modelChanged(model);
@@ -235,8 +235,9 @@ void ZncManager::onConnected()
     d.timestamper.invalidate();
 }
 
-void ZncManager::requestCapabilities(const QStringList& available)
+void ZncManager::requestCapabilities()
 {
+    QStringList available = d.model->network()->availableCapabilities();
     if (available.contains("communi")) {
         QStringList caps = QStringList() << "communi" << QString("communi/%1").arg(d.timestamp);
         d.model->network()->requestCapabilities(caps);
