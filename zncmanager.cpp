@@ -115,7 +115,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
                 }
                 if (d.target != privMsg->target()) {
                     d.target = privMsg->target();
-                    d.buffer = d.model->buffer(d.target);
+                    d.buffer = d.model->find(d.target);
                     emit playbackTargetChanged(d.target);
                 }
                 return false;

@@ -38,6 +38,7 @@ class IrcConnection;
 class IgnoreManager : public QObject, public IrcMessageFilter
 {
     Q_OBJECT
+    Q_INTERFACES(IrcMessageFilter)
     Q_PROPERTY(QStringList ignores READ ignores WRITE setIgnores)
 
 public:

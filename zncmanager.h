@@ -39,6 +39,7 @@ class IrcPrivateMessage;
 class ZncManager : public QObject, public IrcMessageFilter
 {
     Q_OBJECT
+    Q_INTERFACES(IrcMessageFilter)
     Q_PROPERTY(bool playbackActive READ isPlaybackActive NOTIFY playbackActiveChanged)
     Q_PROPERTY(QString playbackTarget READ playbackTarget NOTIFY playbackTargetChanged)
     Q_PROPERTY(IrcBufferModel* model READ model WRITE setModel NOTIFY modelChanged)
