@@ -128,7 +128,7 @@ QString CommandParser::expandAlias(const QString& input) const
             command.replace(pos, regExp.matchedLength(), words.value(index - 1));
         }
         command.replace("$*", words.join(" "));
-        command.replace("$?", currentTarget());
+        command.replace("$?", target());
         return command;
     }
     return input;

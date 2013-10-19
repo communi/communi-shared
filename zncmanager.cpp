@@ -107,7 +107,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
     if (message->type() == IrcMessage::Private) {
         if (message->nick() == QLatin1String("***") && message->ident() == QLatin1String("znc")) {
             IrcPrivateMessage* privMsg = static_cast<IrcPrivateMessage*>(message);
-            QString content = privMsg->message();
+            QString content = privMsg->content();
             if (content == QLatin1String("Buffer Playback...")) {
                 if (!d.playback) {
                     d.playback = true;
@@ -134,7 +134,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
         }
     } else if (message->type() == IrcMessage::Notice) {
         if (message->nick() == "*communi") {
-            d.timestamp = static_cast<IrcNoticeMessage*>(message)->message().toLong();
+            d.timestamp = static_cast<IrcNoticeMessage*>(message)->content().toLong();
             d.timestamper.restart();
             return true;
         }
@@ -155,7 +155,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
 
 bool ZncManager::processMessage(IrcPrivateMessage* message)
 {
-    QString msg = message->message();
+    QString msg = message->content();
     int idx = msg.indexOf(" ");
     if (idx != -1) {
         QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
@@ -216,7 +216,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
 
 bool ZncManager::processNotice(IrcNoticeMessage* message)
 {
-    QString msg = message->message();
+    QString msg = message->content();
     int idx = msg.indexOf(" ");
     if (idx != -1) {
         QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);

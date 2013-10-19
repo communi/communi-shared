@@ -171,7 +171,7 @@ QString MessageFormatter::formatNickMessage(IrcNickMessage* message, const Optio
 QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, const Options& options)
 {
     if (message->isReply()) {
-        const QStringList params = message->message().split(" ", QString::SkipEmptyParts);
+        const QStringList params = message->content().split(" ", QString::SkipEmptyParts);
         const QString cmd = params.value(0);
         const QString arg = params.value(1);
         if (cmd.toUpper() == "PING")
@@ -183,7 +183,7 @@ QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, const O
     }
 
     const QString sender = formatNick(message->nick(), message->flags() & IrcMessage::Own);
-    const QString msg = formatHtml(message->message(), options);
+    const QString msg = formatHtml(message->content(), options);
     return QCoreApplication::translate("MessageFormatter", "[%1] %2").arg(sender, msg);
 }
 
@@ -289,7 +289,7 @@ QString MessageFormatter::formatPongMessage(IrcPongMessage* message, const Optio
 QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, const Options& options)
 {
     const QString sender = formatNick(message->nick(), message->flags() & IrcMessage::Own);
-    const QString msg = formatHtml(message->message(), options);
+    const QString msg = formatHtml(message->content(), options);
     if (message->isAction())
         return QCoreApplication::translate("MessageFormatter", "* %1 %2").arg(sender, msg);
     else if (message->isRequest())
