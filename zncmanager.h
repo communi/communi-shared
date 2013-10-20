@@ -29,7 +29,11 @@
 #define ZNCMANAGER_H
 
 #include <QObject>
+#if QT_VERSION >= 0x040700
 #include <QElapsedTimer>
+#else
+#include <QTime>
+#endif
 #include <IrcBufferModel>
 #include <IrcMessageFilter>
 
@@ -82,7 +86,11 @@ private:
         IrcBuffer* buffer;
         IrcBufferModel* model;
         QString timeStampFormat;
+#if QT_VERSION >= 0x040700
         QElapsedTimer timestamper;
+#else
+        QTime timestamper;
+#endif
     } d;
 };
 
