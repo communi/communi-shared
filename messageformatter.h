@@ -28,46 +28,49 @@
 #ifndef MESSAGEFORMATTER_H
 #define MESSAGEFORMATTER_H
 
+#include <QHash>
+#include <QDateTime>
 #include <IrcMessage>
 #include <IrcTextFormat>
+
+class IrcBuffer;
+class IrcUserModel;
 
 class MessageFormatter : public QObject
 {
     Q_OBJECT
 
 public:
-    struct Options
-    {
-        Options() : repeat(false), highlight(false), stripNicks(false), textFormat(0) { }
-        bool repeat;
-        bool highlight;
-        bool stripNicks;
-        QString nickName;
-        QStringList users;
-        QDateTime timeStamp;
-        QString timeStampFormat;
-        IrcTextFormat* textFormat;
-    };
+    MessageFormatter(QObject* parent = 0);
 
-    Q_INVOKABLE static QString formatMessage(IrcMessage* message, const Options& options = Options());
-    static QString formatLine(const QString& message, const Options& options = Options());
-    static QString formatHtml(const QString& message, const Options& options = Options());
+    IrcBuffer* buffer() const;
+    void setBuffer(IrcBuffer* buffer);
+
+    IrcTextFormat* textFormat() const;
+    void setTextFormat(IrcTextFormat* format);
+
+    QString timeStampFormat() const;
+    void setTimeStampFormat(const QString& format);
+
+    Q_INVOKABLE QString formatMessage(IrcMessage* message);
+    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime());
+    QString formatHtml(const QString& message);
 
 protected:
-    static QString formatInviteMessage(IrcInviteMessage* message, const Options& options);
-    static QString formatJoinMessage(IrcJoinMessage* message, const Options& options);
-    static QString formatKickMessage(IrcKickMessage* message, const Options& options);
-    static QString formatModeMessage(IrcModeMessage* message, const Options& options);
-    static QString formatNamesMessage(IrcNamesMessage* message, const Options& options);
-    static QString formatNickMessage(IrcNickMessage* message, const Options& options);
-    static QString formatNoticeMessage(IrcNoticeMessage* message, const Options& options);
-    static QString formatNumericMessage(IrcNumericMessage* message, const Options& options);
-    static QString formatPartMessage(IrcPartMessage* message, const Options& options);
-    static QString formatPongMessage(IrcPongMessage* message, const Options& options);
-    static QString formatPrivateMessage(IrcPrivateMessage* message, const Options& options);
-    static QString formatQuitMessage(IrcQuitMessage* message, const Options& options);
-    static QString formatTopicMessage(IrcTopicMessage* message, const Options& options);
-    static QString formatUnknownMessage(IrcMessage* message, const Options& options);
+    QString formatInviteMessage(IrcInviteMessage* message);
+    QString formatJoinMessage(IrcJoinMessage* message);
+    QString formatKickMessage(IrcKickMessage* message);
+    QString formatModeMessage(IrcModeMessage* message);
+    QString formatNamesMessage(IrcNamesMessage* message);
+    QString formatNickMessage(IrcNickMessage* message);
+    QString formatNoticeMessage(IrcNoticeMessage* message);
+    QString formatNumericMessage(IrcNumericMessage* message);
+    QString formatPartMessage(IrcPartMessage* message);
+    QString formatPongMessage(IrcPongMessage* message);
+    QString formatPrivateMessage(IrcPrivateMessage* message);
+    QString formatQuitMessage(IrcQuitMessage* message);
+    QString formatTopicMessage(IrcTopicMessage* message);
+    QString formatUnknownMessage(IrcMessage* message);
 
     static QString formatPingReply(const QString& nick, const QString& arg);
 
@@ -77,6 +80,15 @@ protected:
     static QString formatIdleTime(int secs);
 
     static QString formatNames(const QStringList& names, int columns = 6);
+
+private:
+    struct Private {
+        IrcBuffer* buffer;
+        IrcUserModel* userModel;
+        QString timeStampFormat;
+        IrcTextFormat* textFormat;
+        QHash<IrcBuffer*, bool> repeats;
+    } d;
 };
 
 #endif // MESSAGEFORMATTER_H
