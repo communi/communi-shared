@@ -29,6 +29,7 @@
 #define MESSAGEFORMATTER_H
 
 #include <QHash>
+#include <QColor>
 #include <QDateTime>
 #include <IrcMessage>
 #include <IrcTextFormat>
@@ -39,6 +40,7 @@ class IrcUserModel;
 class MessageFormatter : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor)
 
 public:
     MessageFormatter(QObject* parent = 0);
@@ -51,6 +53,9 @@ public:
 
     QString timeStampFormat() const;
     void setTimeStampFormat(const QString& format);
+
+    QColor baseColor();
+    void setBaseColor(const QColor& color);
 
     Q_INVOKABLE QString formatMessage(IrcMessage* message);
     QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime());
@@ -83,6 +88,7 @@ protected:
 
 private:
     struct Private {
+        QColor baseColor;
         IrcBuffer* buffer;
         IrcUserModel* userModel;
         QString timeStampFormat;

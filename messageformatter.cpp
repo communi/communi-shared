@@ -45,6 +45,7 @@ MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
     d.userModel = new IrcUserModel(this);
     d.textFormat = new IrcTextFormat(this);
     d.textFormat->setSpanFormat(IrcTextFormat::SpanClass);
+    d.baseColor = baseColor = QColor::fromHsl(359, 102, 116);
 }
 
 IrcBuffer* MessageFormatter::buffer() const
@@ -68,6 +69,16 @@ IrcTextFormat* MessageFormatter::textFormat() const
 void MessageFormatter::setTextFormat(IrcTextFormat* format)
 {
     d.textFormat = format;
+}
+
+QColor MessageFormatter::baseColor()
+{
+    return d.baseColor;
+}
+
+void MessageFormatter::setBaseColor(const QColor& color)
+{
+    d.baseColor = color;
 }
 
 QString MessageFormatter::formatMessage(IrcMessage* message)
@@ -372,7 +383,9 @@ QString MessageFormatter::formatPingReply(const QString& nick, const QString& ar
 
 QString MessageFormatter::formatNick(const QString& nick, bool own)
 {
-    QColor color = QColor::fromHsl(qHash(nick) % 359, (own ? 0 : 102), 116);
+    int h = qHash(nick) % 359;
+    int s = own ? 0 : d.baseColor.saturation();
+    int l = d.baseColor.lightness();
     return QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(color.name()).arg(nick);
 }
 
