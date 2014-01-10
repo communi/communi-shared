@@ -57,34 +57,34 @@ public:
     QColor baseColor();
     void setBaseColor(const QColor& color);
 
-    Q_INVOKABLE QString formatMessage(IrcMessage* message);
-    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime());
-    QString formatHtml(const QString& message);
+    Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText);
+    QString formatLine(const QString& message, const QDateTime& timeStamp, Qt::TextFormat format);
+    QString formatContent(const QString& message, Qt::TextFormat format);
 
 protected:
-    QString formatInviteMessage(IrcInviteMessage* message);
-    QString formatJoinMessage(IrcJoinMessage* message);
-    QString formatKickMessage(IrcKickMessage* message);
-    QString formatModeMessage(IrcModeMessage* message);
-    QString formatNamesMessage(IrcNamesMessage* message);
-    QString formatNickMessage(IrcNickMessage* message);
-    QString formatNoticeMessage(IrcNoticeMessage* message);
-    QString formatNumericMessage(IrcNumericMessage* message);
-    QString formatPartMessage(IrcPartMessage* message);
-    QString formatPongMessage(IrcPongMessage* message);
-    QString formatPrivateMessage(IrcPrivateMessage* message);
-    QString formatQuitMessage(IrcQuitMessage* message);
-    QString formatTopicMessage(IrcTopicMessage* message);
-    QString formatUnknownMessage(IrcMessage* message);
+    QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format);
+    QString formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format);
+    QString formatKickMessage(IrcKickMessage* message, Qt::TextFormat format);
+    QString formatModeMessage(IrcModeMessage* message, Qt::TextFormat format);
+    QString formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format);
+    QString formatNickMessage(IrcNickMessage* message, Qt::TextFormat format);
+    QString formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format);
+    QString formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format);
+    QString formatPartMessage(IrcPartMessage* message, Qt::TextFormat format);
+    QString formatPongMessage(IrcPongMessage* message, Qt::TextFormat format);
+    QString formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format);
+    QString formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format);
+    QString formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format);
+    QString formatUnknownMessage(IrcMessage* message, Qt::TextFormat format);
 
-    static QString formatPingReply(const QString& nick, const QString& arg);
+    static QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format);
 
-    static QString formatNick(const QString& nick, bool own = false);
-    static QString formatPrefix(const QString& prefix, bool strip = true, bool own = false);
+    static QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false);
+    static QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false);
 
     static QString formatIdleTime(int secs);
 
-    static QString formatNames(const QStringList& names, int columns = 6);
+    static QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6);
 
 private:
     struct Private {
