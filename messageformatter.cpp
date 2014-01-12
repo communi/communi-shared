@@ -71,6 +71,16 @@ void MessageFormatter::setTextFormat(IrcTextFormat* format)
     d.textFormat = format;
 }
 
+QString MessageFormatter::timeStampFormat() const
+{
+    return d.timeStampFormat;
+}
+
+void MessageFormatter::setTimeStampFormat(const QString &format)
+{
+    d.timeStampFormat = format;
+}
+
 QColor MessageFormatter::baseColor()
 {
     return d.baseColor;
