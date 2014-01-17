@@ -41,6 +41,7 @@
 MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
 {
     d.buffer = 0;
+    d.strip = false;
     d.timeStampFormat = "[hh:mm:ss]";
     d.userModel = new IrcUserModel(this);
     d.textFormat = new IrcTextFormat(this);
@@ -89,6 +90,16 @@ QColor MessageFormatter::baseColor()
 void MessageFormatter::setBaseColor(const QColor& color)
 {
     d.baseColor = color;
+}
+
+bool MessageFormatter::stripNicks() const
+{
+    return d.strip;
+}
+
+void MessageFormatter::setStripNicks(bool strip)
+{
+    d.strip = strip;
 }
 
 QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat format)
@@ -179,8 +190,7 @@ QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::Tex
 QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format)
 {
     const bool repeat = d.repeats.value(d.buffer);
-    // TODO: strip=false
-    const QString sender = formatPrefix(message->prefix(), format, false, message->flags() & IrcMessage::Own);
+    const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
     if (message->flags() & IrcMessage::Own && repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 rejoined %2").arg(sender, message->channel());
     else
@@ -301,7 +311,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
         case Irc::RPL_TOPICWHOTIME:
             if (!repeat) {
                 QDateTime dateTime = QDateTime::fromTime_t(P_(3).toInt());
-                return QCoreApplication::translate("MessageFormatter", "! %1 topic was set %2 by %3").arg(P_(1), dateTime.toString(), formatPrefix(P_(2), format, false)); // TODO: strip=false
+                return QCoreApplication::translate("MessageFormatter", "! %1 topic was set %2 by %3").arg(P_(1), dateTime.toString(), formatPrefix(P_(2), format, d.strip));
             }
             return QString();
 
@@ -330,8 +340,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
 
 QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFormat format)
 {
-    // TODO: strip=false
-    const QString sender = formatPrefix(message->prefix(), format, false, message->flags() & IrcMessage::Own);
+    const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 parted %2 (%3)").arg(sender, message->channel(), formatContent(message->reason(), format));
     else
@@ -357,8 +366,7 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
 
 QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format)
 {
-    // TODO: strip=false
-    const QString sender = formatPrefix(message->prefix(), format, false, message->flags() & IrcMessage::Own);
+    const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
     if (!message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 has quit (%2)").arg(sender, formatContent(message->reason(), format));
     else
