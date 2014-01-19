@@ -42,6 +42,7 @@ MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
 {
     d.buffer = 0;
     d.strip = false;
+    d.detailed = true;
     d.timeStampFormat = "[hh:mm:ss]";
     d.userModel = new IrcUserModel(this);
     d.textFormat = new IrcTextFormat(this);
@@ -100,6 +101,16 @@ bool MessageFormatter::stripNicks() const
 void MessageFormatter::setStripNicks(bool strip)
 {
     d.strip = strip;
+}
+
+bool MessageFormatter::isDetailed() const
+{
+    return d.detailed;
+}
+
+void MessageFormatter::setDetailed(bool detailed)
+{
+    d.detailed = detailed;
 }
 
 QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat format)
@@ -201,7 +212,7 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFor
 {
     const QString kicker = formatNick(message->nick(), format, message->flags() & IrcMessage::Own);
     const QString user = formatNick(message->user(), format, !message->user().compare(message->connection()->nickName()));
-    if (!message->reason().isEmpty())
+    if (d.detailed && !message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2 (%3)").arg(kicker, user, message->reason());
     else
         return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2").arg(kicker, user);
@@ -341,7 +352,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
 QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFormat format)
 {
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
-    if (!message->reason().isEmpty())
+    if (d.detailed && !message->reason().isEmpty())
         return QCoreApplication::translate("MessageFormatter", "! %1 parted %2 (%3)").arg(sender, message->channel(), formatContent(message->reason(), format));
     else
         return QCoreApplication::translate("MessageFormatter", "! %1 parted %2").arg(sender, message->channel());
@@ -367,10 +378,18 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
 QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format)
 {
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
-    if (!message->reason().isEmpty())
-        return QCoreApplication::translate("MessageFormatter", "! %1 has quit (%2)").arg(sender, formatContent(message->reason(), format));
-    else
-        return QCoreApplication::translate("MessageFormatter", "! %1 has quit").arg(sender);
+    if (!message->reason().isEmpty()) {
+        if (d.detailed)
+            return QCoreApplication::translate("MessageFormatter", "! %1 has quit (%2)").arg(sender, formatContent(message->reason(), format));
+        QString reason = message->reason();
+        if (reason.contains("Ping timeout"))
+            return QCoreApplication::translate("MessageFormatter", "! %1 has timed out").arg(sender);
+        if (reason.contains("Remote host closed the connection"))
+            return QCoreApplication::translate("MessageFormatter", "! %1 has disconnected").arg(sender);
+        if (reason.contains("Connection reset by peer"))
+            return QCoreApplication::translate("MessageFormatter", "! %1 has lost connection").arg(sender);
+    }
+    return QCoreApplication::translate("MessageFormatter", "! %1 has quit").arg(sender);
 }
 
 QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format)

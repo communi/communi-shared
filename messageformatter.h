@@ -42,6 +42,7 @@ class MessageFormatter : public QObject
     Q_OBJECT
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor)
     Q_PROPERTY(bool stripNicks READ stripNicks WRITE setStripNicks)
+    Q_PROPERTY(bool detailed READ isDetailed WRITE setDetailed)
 
 public:
     MessageFormatter(QObject* parent = 0);
@@ -60,6 +61,9 @@ public:
 
     bool stripNicks() const;
     void setStripNicks(bool strip);
+
+    bool isDetailed() const;
+    void setDetailed(bool detailed);
 
     Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText);
     QString formatLine(const QString& message, const QDateTime& timeStamp, Qt::TextFormat format);
@@ -93,6 +97,7 @@ protected:
 private:
     struct Private {
         bool strip;
+        bool detailed;
         QColor baseColor;
         IrcBuffer* buffer;
         IrcUserModel* userModel;
