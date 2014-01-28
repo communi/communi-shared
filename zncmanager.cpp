@@ -136,61 +136,66 @@ bool ZncManager::messageFilter(IrcMessage* message)
 bool ZncManager::processMessage(IrcPrivateMessage* message)
 {
     QString msg = message->content();
-    int idx = msg.indexOf(" ");
-    if (idx != -1) {
-        QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
-        if (timeStamp.isValid()) {
-            msg.remove(0, idx + 1);
-
-            if (message->nick() == "*buffextras") {
-                idx = msg.indexOf(" ");
-                QString prefix = msg.left(idx);
-                QString content = msg.mid(idx + 1);
-
-                IrcMessage* tmp = 0;
-                if (content.startsWith("joined")) {
-                    tmp = IrcMessage::fromParameters(prefix, "JOIN", QStringList() << message->target(), message->connection());
-                } else if (content.startsWith("parted")) {
-                    QString reason = content.mid(content.indexOf("[") + 1);
-                    reason.chop(1);
-                    tmp = IrcMessage::fromParameters(prefix, "PART", QStringList() << message->target() << reason , message->connection());
-                } else if (content.startsWith("quit")) {
-                    QString reason = content.mid(content.indexOf("[") + 1);
-                    reason.chop(1);
-                    tmp = IrcMessage::fromParameters(prefix, "QUIT", QStringList() << reason , message->connection());
-                } else if (content.startsWith("is")) {
-                    QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    tmp = IrcMessage::fromParameters(prefix, "NICK", QStringList() << tokens.last() , message->connection());
-                } else if (content.startsWith("set")) {
-                    QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    QString user = tokens.takeLast();
-                    QString mode = tokens.takeLast();
-                    tmp = IrcMessage::fromParameters(prefix, "MODE", QStringList() << message->target() << mode << user, message->connection());
-                } else if (content.startsWith("changed")) {
-                    QString topic = content.mid(content.indexOf(":") + 2);
-                    tmp = IrcMessage::fromParameters(prefix, "TOPIC", QStringList() << message->target() << topic, message->connection());
-                } else if (content.startsWith("kicked")) {
-                    QString reason = content.mid(content.indexOf("[") + 1);
-                    reason.chop(1);
-                    QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-                    tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
-                }
-                if (tmp) {
-                    tmp->setTimeStamp(timeStamp);
-                    d.buffer->receiveMessage(tmp);
-                    tmp->deleteLater();
-                    return true;
-                }
-            }
-
-            if (message->isAction())
-                msg = QString("\1ACTION %1\1").arg(msg);
-            else if (message->isRequest())
-                msg = QString("\1%1\1").arg(msg);
-            message->setParameters(QStringList() << message->target() << msg);
-            message->setTimeStamp(timeStamp);
+    QDateTime timeStamp = message->tags().value("time").toDateTime();
+    if (!timeStamp.isValid()) {
+        int idx = msg.indexOf(" ");
+        if (idx != -1) {
+            timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
+            if (timeStamp.isValid())
+                msg.remove(0, idx + 1);
         }
     }
+
+    if (message->nick() == "*buffextras") {
+        int idx = msg.indexOf(" ");
+        QString prefix = msg.left(idx);
+        QString content = msg.mid(idx + 1);
+
+        IrcMessage* tmp = 0;
+        if (content.startsWith("joined")) {
+            tmp = IrcMessage::fromParameters(prefix, "JOIN", QStringList() << message->target(), message->connection());
+        } else if (content.startsWith("parted")) {
+            QString reason = content.mid(content.indexOf("[") + 1);
+            reason.chop(1);
+            tmp = IrcMessage::fromParameters(prefix, "PART", QStringList() << message->target() << reason , message->connection());
+        } else if (content.startsWith("quit")) {
+            QString reason = content.mid(content.indexOf("[") + 1);
+            reason.chop(1);
+            tmp = IrcMessage::fromParameters(prefix, "QUIT", QStringList() << reason , message->connection());
+        } else if (content.startsWith("is")) {
+            QStringList tokens = content.split(" ", QString::SkipEmptyParts);
+            tmp = IrcMessage::fromParameters(prefix, "NICK", QStringList() << tokens.last() , message->connection());
+        } else if (content.startsWith("set")) {
+            QStringList tokens = content.split(" ", QString::SkipEmptyParts);
+            QString user = tokens.takeLast();
+            QString mode = tokens.takeLast();
+            tmp = IrcMessage::fromParameters(prefix, "MODE", QStringList() << message->target() << mode << user, message->connection());
+        } else if (content.startsWith("changed")) {
+            QString topic = content.mid(content.indexOf(":") + 2);
+            tmp = IrcMessage::fromParameters(prefix, "TOPIC", QStringList() << message->target() << topic, message->connection());
+        } else if (content.startsWith("kicked")) {
+            QString reason = content.mid(content.indexOf("[") + 1);
+            reason.chop(1);
+            QStringList tokens = content.split(" ", QString::SkipEmptyParts);
+            tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
+        }
+        if (tmp) {
+            if (timeStamp.isValid())
+                tmp->setTimeStamp(timeStamp);
+            d.buffer->receiveMessage(tmp);
+            tmp->deleteLater();
+            return true;
+        }
+    }
+
+    if (message->isAction())
+        msg = QString("\1ACTION %1\1").arg(msg);
+    else if (message->isRequest())
+        msg = QString("\1%1\1").arg(msg);
+    message->setParameters(QStringList() << message->target() << msg);
+    if (timeStamp.isValid())
+        message->setTimeStamp(timeStamp);
+
     return IgnoreManager::instance()->messageFilter(message);
 }
 
@@ -218,9 +223,17 @@ void ZncManager::onConnected()
 
 void ZncManager::requestCapabilities()
 {
+    QStringList request;
     QStringList available = d.model->network()->availableCapabilities();
-    if (available.contains("communi")) {
-        QStringList caps = QStringList() << "communi" << QString("communi/%1").arg(d.timestamp);
-        d.model->network()->requestCapabilities(caps);
-    }
+
+    if (available.contains("communi"))
+        request << "communi" << QString("communi/%1").arg(d.timestamp);
+
+    if (available.contains("znc.in/server-time-iso"))
+        request << "znc.in/server-time-iso";
+    else if (available.contains("znc.in/server-time"))
+        request << "znc.in/server-time";
+
+    if (!request.isEmpty())
+        d.model->network()->requestCapabilities(request);
 }
