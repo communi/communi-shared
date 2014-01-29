@@ -79,12 +79,12 @@ QString MessageFormatter::timeStampFormat() const
     return d.timeStampFormat;
 }
 
-void MessageFormatter::setTimeStampFormat(const QString &format)
+void MessageFormatter::setTimeStampFormat(const QString& format)
 {
     d.timeStampFormat = format;
 }
 
-QColor MessageFormatter::baseColor()
+QColor MessageFormatter::baseColor() const
 {
     return d.baseColor;
 }

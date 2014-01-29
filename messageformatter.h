@@ -57,7 +57,7 @@ public:
     QString timeStampFormat() const;
     void setTimeStampFormat(const QString& format);
 
-    QColor baseColor();
+    QColor baseColor() const;
     void setBaseColor(const QColor& color);
 
     bool stripNicks() const;
