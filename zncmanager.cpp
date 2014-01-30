@@ -230,7 +230,9 @@ void ZncManager::requestCapabilities()
     if (available.contains("communi"))
         request << "communi" << QString("communi/%1").arg(d.timestamp);
 
-    if (available.contains("znc.in/server-time-iso"))
+    if (available.contains("server-time"))
+        request << "server-time";
+    else if (available.contains("znc.in/server-time-iso"))
         request << "znc.in/server-time-iso";
     else if (available.contains("znc.in/server-time"))
         request << "znc.in/server-time";
