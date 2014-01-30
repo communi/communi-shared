@@ -48,7 +48,7 @@ MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
     d.userModel = new IrcUserModel(this);
     d.textFormat = new IrcTextFormat(this);
     d.textFormat->setSpanFormat(IrcTextFormat::SpanClass);
-    d.baseColor = baseColor = QColor::fromHsl(359, 102, 116);
+    d.baseColor = QColor::fromHsl(359, 102, 116);
 }
 
 IrcBuffer* MessageFormatter::buffer() const

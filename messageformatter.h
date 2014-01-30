@@ -86,14 +86,14 @@ protected:
     QString formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format);
     QString formatUnknownMessage(IrcMessage* message, Qt::TextFormat format);
 
-    static QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format);
+    QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format);
 
-    static QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false);
-    static QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false);
+    QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false);
+    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false);
 
-    static QString formatIdleTime(int secs);
+    QString formatIdleTime(int secs);
 
-    static QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6);
+    QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6);
 
 private:
     struct Private {
