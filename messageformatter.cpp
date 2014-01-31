@@ -432,7 +432,7 @@ QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format,
     int h = qHash(nick) % 359;
     int s = own ? 0 : d.baseColor.saturation();
     int l = d.baseColor.lightness();
-    return QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(color.name()).arg(nick);
+    return QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(nick);
 }
 
 QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip, bool own)
