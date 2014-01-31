@@ -87,6 +87,11 @@ void ZncManager::setTimeStampFormat(const QString& format)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
+    // TODO: refactor out of ZncManager
+    QDateTime timeStamp = message->tags().value("time").toDateTime();
+    if (timeStamp.isValid())
+        message->setTimeStamp(timeStamp);
+
     if (d.timestamp > 0 && d.timestamper.isValid()) {
         long elapsed = d.timestamper.elapsed() / 1000;
         if (elapsed > 0) {
@@ -137,13 +142,14 @@ bool ZncManager::messageFilter(IrcMessage* message)
 bool ZncManager::processMessage(IrcPrivateMessage* message)
 {
     QString msg = message->content();
-    QDateTime timeStamp = message->tags().value("time").toDateTime();
-    if (!timeStamp.isValid()) {
+    if (message->tags().isEmpty()) {
         int idx = msg.indexOf(" ");
         if (idx != -1) {
-            timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
-            if (timeStamp.isValid())
+            QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
+            if (timeStamp.isValid()) {
+                message->setTimeStamp(timeStamp);
                 msg.remove(0, idx + 1);
+            }
         }
     }
 
@@ -181,8 +187,7 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
             tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
         }
         if (tmp) {
-            if (timeStamp.isValid())
-                tmp->setTimeStamp(timeStamp);
+            tmp->setTimeStamp(message->timeStamp());
             d.buffer->receiveMessage(tmp);
             tmp->deleteLater();
             return true;
@@ -194,8 +199,6 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
     else if (message->isRequest())
         msg = QString("\1%1\1").arg(msg);
     message->setParameters(QStringList() << message->target() << msg);
-    if (timeStamp.isValid())
-        message->setTimeStamp(timeStamp);
 
     return IgnoreManager::instance()->messageFilter(message);
 }
@@ -203,17 +206,21 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
 bool ZncManager::processNotice(IrcNoticeMessage* message)
 {
     QString msg = message->content();
-    int idx = msg.indexOf(" ");
-    if (idx != -1) {
-        QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
-        if (timeStamp.isValid()) {
-            message->setTimeStamp(timeStamp);
-            msg.remove(0, idx + 1);
-            if (message->isReply())
-                msg = QString("\1%1\1").arg(msg);
-            message->setParameters(QStringList() << message->target() << msg);
+    if (message->tags().isEmpty()) {
+        int idx = msg.indexOf(" ");
+        if (idx != -1) {
+            QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
+            if (timeStamp.isValid()) {
+                message->setTimeStamp(timeStamp);
+                msg.remove(0, idx + 1);
+            }
         }
     }
+
+    if (message->isReply())
+        msg = QString("\1%1\1").arg(msg);
+    message->setParameters(QStringList() << message->target() << msg);
+
     return IgnoreManager::instance()->messageFilter(message);
 }
 
