@@ -90,7 +90,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
     // TODO: refactor out of ZncManager
     QDateTime timeStamp = message->tags().value("time").toDateTime();
     if (timeStamp.isValid())
-        message->setTimeStamp(timeStamp);
+        message->setTimeStamp(timeStamp.toTimeSpec(Qt::LocalTime));
 
     if (d.timestamp > 0 && d.timestamper.isValid()) {
         long elapsed = d.timestamper.elapsed() / 1000;
