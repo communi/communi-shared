@@ -36,10 +36,8 @@ ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
     d.buffer = 0;
-    d.timestamp = 0;
     d.playback = false;
-    d.timestamper.invalidate();
-    d.timeStampFormat = "[hh:mm:ss]";
+    d.timestamp = QDateTime::fromTime_t(0);
     setModel(qobject_cast<IrcBufferModel*>(parent));
 }
 
@@ -57,14 +55,12 @@ void ZncManager::setModel(IrcBufferModel* model)
     if (d.model != model) {
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
-            disconnect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
             disconnect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->removeMessageFilter(this);
         }
         d.model = model;
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
-            connect(connection, SIGNAL(connected()), this, SLOT(onConnected()));
             connect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->installMessageFilter(this);
         }
@@ -72,32 +68,12 @@ void ZncManager::setModel(IrcBufferModel* model)
     }
 }
 
-QString ZncManager::timeStampFormat() const
-{
-    return d.timeStampFormat;
-}
-
-void ZncManager::setTimeStampFormat(const QString& format)
-{
-    if (d.timeStampFormat != format) {
-        d.timeStampFormat = format;
-        emit timeStampFormatChanged(format);
-    }
-}
-
 bool ZncManager::messageFilter(IrcMessage* message)
 {
-    // TODO: refactor out of ZncManager
-    QDateTime timeStamp = message->tags().value("time").toDateTime();
-    if (timeStamp.isValid())
-        message->setTimeStamp(timeStamp.toTimeSpec(Qt::LocalTime));
-
-    if (d.timestamp > 0 && d.timestamper.isValid()) {
-        long elapsed = d.timestamper.elapsed() / 1000;
-        if (elapsed > 0) {
-            d.timestamp += elapsed;
-            d.timestamper.restart();
-        }
+    if (message->tags().contains("time")) {
+        d.timestamp = message->tags().value("time").toDateTime();
+        if (d.timestamp.isValid())
+            message->setTimeStamp(d.timestamp.toTimeSpec(Qt::LocalTime));
     }
 
     if (message->type() == IrcMessage::Private) {
@@ -120,8 +96,7 @@ bool ZncManager::messageFilter(IrcMessage* message)
         }
     } else if (message->type() == IrcMessage::Notice) {
         if (message->nick() == "*communi") {
-            d.timestamp = static_cast<IrcNoticeMessage*>(message)->content().toLong();
-            d.timestamper.restart();
+            d.timestamp = QDateTime::fromTime_t(static_cast<IrcNoticeMessage*>(message)->content().toLong());
             return true;
         }
     }
@@ -142,17 +117,6 @@ bool ZncManager::messageFilter(IrcMessage* message)
 bool ZncManager::processMessage(IrcPrivateMessage* message)
 {
     QString msg = message->content();
-    if (message->tags().isEmpty()) {
-        int idx = msg.indexOf(" ");
-        if (idx != -1) {
-            QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
-            if (timeStamp.isValid()) {
-                message->setTimeStamp(timeStamp);
-                msg.remove(0, idx + 1);
-            }
-        }
-    }
-
     if (message->nick() == "*buffextras") {
         int idx = msg.indexOf(" ");
         QString prefix = msg.left(idx);
@@ -206,27 +170,11 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
 bool ZncManager::processNotice(IrcNoticeMessage* message)
 {
     QString msg = message->content();
-    if (message->tags().isEmpty()) {
-        int idx = msg.indexOf(" ");
-        if (idx != -1) {
-            QDateTime timeStamp = QDateTime::fromString(msg.left(idx), d.timeStampFormat);
-            if (timeStamp.isValid()) {
-                message->setTimeStamp(timeStamp);
-                msg.remove(0, idx + 1);
-            }
-        }
-    }
-
     if (message->isReply())
         msg = QString("\1%1\1").arg(msg);
     message->setParameters(QStringList() << message->target() << msg);
 
     return IgnoreManager::instance()->messageFilter(message);
-}
-
-void ZncManager::onConnected()
-{
-    d.timestamper.invalidate();
 }
 
 void ZncManager::requestCapabilities()
@@ -235,7 +183,7 @@ void ZncManager::requestCapabilities()
     QStringList available = d.model->network()->availableCapabilities();
 
     if (available.contains("communi"))
-        request << "communi" << QString("communi/%1").arg(d.timestamp);
+        request << "communi" << QString("communi/%1").arg(d.timestamp.toTime_t());
 
     if (available.contains("server-time"))
         request << "server-time";

@@ -30,7 +30,7 @@
 #define ZNCMANAGER_H
 
 #include <QObject>
-#include <QElapsedTimer>
+#include <QDateTime>
 #include <IrcBufferModel>
 #include <IrcMessageFilter>
 
@@ -42,7 +42,6 @@ class ZncManager : public QObject, public IrcMessageFilter
     Q_OBJECT
     Q_INTERFACES(IrcMessageFilter)
     Q_PROPERTY(IrcBufferModel* model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QString timeStampFormat READ timeStampFormat WRITE setTimeStampFormat NOTIFY timeStampFormatChanged)
 
 public:
     explicit ZncManager(QObject* parent = 0);
@@ -51,14 +50,10 @@ public:
     IrcBufferModel* model() const;
     void setModel(IrcBufferModel* model);
 
-    QString timeStampFormat() const;
-    void setTimeStampFormat(const QString& format);
-
     bool messageFilter(IrcMessage* message);
 
 signals:
     void modelChanged(IrcBufferModel* model);
-    void timeStampFormatChanged(const QString& format);
 
     void playbackBegin(IrcBuffer* buffer);
     void playbackEnd(IrcBuffer* buffer);
@@ -68,17 +63,14 @@ protected:
     bool processNotice(IrcNoticeMessage* message);
 
 private slots:
-    void onConnected();
     void requestCapabilities();
 
 private:
     mutable struct Private {
         bool playback;
-        long timestamp;
         IrcBuffer* buffer;
         IrcBufferModel* model;
-        QString timeStampFormat;
-        QElapsedTimer timestamper;
+        QDateTime timestamp;
     } d;
 };
 
