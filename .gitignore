@@ -1,0 +1,10 @@
+.qmake.cache
+.qmake.stash
+Makefile
+Makefile.*
+*.o
+*.moc
+moc_*.cpp
+*.user
+
+tests/messageformatter/messageformatter
