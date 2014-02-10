@@ -29,6 +29,7 @@
 #ifndef MESSAGEFORMATTER_H
 #define MESSAGEFORMATTER_H
 
+#include <QSet>
 #include <QHash>
 #include <QColor>
 #include <QDateTime>
@@ -95,12 +96,16 @@ protected:
 
     QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6);
 
+private slots:
+    void setNames(const QStringList& names);
+
 private:
     struct Private {
         bool strip;
         bool detailed;
         QColor baseColor;
         IrcBuffer* buffer;
+        QSet<QString> names;
         IrcUserModel* userModel;
         QString timeStampFormat;
         IrcTextFormat* textFormat;

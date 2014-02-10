@@ -45,10 +45,12 @@ MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
     d.strip = false;
     d.detailed = true;
     d.timeStampFormat = "[hh:mm:ss]";
-    d.userModel = new IrcUserModel(this);
     d.textFormat = new IrcTextFormat(this);
     d.textFormat->setSpanFormat(IrcTextFormat::SpanClass);
     d.baseColor = QColor::fromHsl(359, 102, 116);
+
+    d.userModel = new IrcUserModel(this);
+    connect(d.userModel, SIGNAL(namesChanged(QStringList)), this, SLOT(setNames(QStringList)));
 }
 
 IrcBuffer* MessageFormatter::buffer() const
@@ -466,35 +468,27 @@ QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat f
 {
     if (format == Qt::PlainText)
         return d.textFormat->toPlainText(message);
+
     QString msg = d.textFormat->toHtml(message);
-    const QStringList names = d.userModel->names();
-    for (int i = names.count() - 1; i >= 0; --i) {
-        const QString& user = names.at(i);
-        int pos = 0;
-        while ((pos = msg.indexOf(user, pos)) != -1) {
-            QTextBoundaryFinder finder(QTextBoundaryFinder::Word, msg);
-
-            finder.setPosition(pos);
-            if (!finder.isAtBoundary()) {
-                pos += user.length();
-                continue;
+    if (!d.names.isEmpty()) {
+        QTextBoundaryFinder finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
+        while (finder.isAtBoundary()) {
+            const int pos = finder.position();
+            const int end = finder.toNextBoundary();
+            if (end != -1) {
+                QString user = msg.mid(pos, end - pos);
+                if (d.names.contains(user)) {
+                    const int anchor = msg.indexOf("</a>", pos + user.length() + 1);
+                    if (anchor != -1 && anchor <= msg.indexOf('<', pos + user.length() + 1)) {
+                        finder.setPosition(anchor + 4);
+                        continue;
+                    }
+                    const QString formatted = formatNick(user, format);
+                    msg.replace(pos, user.length(), formatted);
+                    finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
+                    finder.setPosition(pos + formatted.length());
+                }
             }
-
-            finder.setPosition(pos + user.length());
-            if (!finder.isAtBoundary()) {
-                pos += user.length();
-                continue;
-            }
-
-            const int anchor = msg.indexOf("</a>", pos + user.length() + 1);
-            if (anchor != -1 && anchor <= msg.indexOf('<', pos + user.length() + 1)) {
-                pos += user.length();
-                continue;
-            }
-
-            QString formatted = formatNick(msg.mid(pos, user.length()), format);
-            msg.replace(pos, user.length(), formatted);
-            pos += formatted.length();
         }
     }
     return msg;
@@ -519,4 +513,9 @@ QString MessageFormatter::formatNames(const QStringList &names, Qt::TextFormat f
     }
     message += "</table>";
     return message;
+}
+
+void MessageFormatter::setNames(const QStringList& names)
+{
+    d.names = names.toSet();
 }
