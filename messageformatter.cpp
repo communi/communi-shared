@@ -472,23 +472,39 @@ QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat f
     QString msg = d.textFormat->toHtml(message);
     if (!d.names.isEmpty()) {
         QTextBoundaryFinder finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
-        while (finder.isAtBoundary()) {
-            const int pos = finder.position();
-            const int end = finder.toNextBoundary();
-            if (end != -1) {
-                QString user = msg.mid(pos, end - pos);
-                if (d.names.contains(user)) {
-                    const int anchor = msg.indexOf("</a>", pos + user.length() + 1);
-                    if (anchor != -1 && anchor <= msg.indexOf('<', pos + user.length() + 1)) {
-                        finder.setPosition(anchor + 4);
+        int pos = 0;
+        while (pos < msg.length()) {
+            const QChar c = msg.at(pos);
+            if (!c.isSpace()) {
+                // do not format nicks within links
+                if (c == '&' && msg.midRef(pos, 6) == "&lt;a ") {
+                    const int end = msg.indexOf("&lt;/a>", pos + 6);
+                    if (end != -1) {
+                        pos = end + 7;
                         continue;
                     }
-                    const QString formatted = formatNick(user, format);
-                    msg.replace(pos, user.length(), formatted);
-                    finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
-                    finder.setPosition(pos + formatted.length());
+                }
+                // test word start boundary
+                finder.setPosition(pos);
+                if (finder.isAtBoundary()) {
+                    QMultiHash<QChar, QString>::iterator it = d.names.find(c);
+                    while (it != d.names.end() && it.key() == c) {
+                        const QString& user = it.value();
+                        if (msg.midRef(pos, user.length()) == user) {
+                            // test word end boundary
+                            finder.setPosition(pos + user.length());
+                            if (finder.isAtBoundary()) {
+                                const QString formatted = formatNick(user, format);
+                                msg.replace(pos, user.length(), formatted);
+                                pos += formatted.length();
+                                finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
+                            }
+                        }
+                        ++it;
+                    }
                 }
             }
+            ++pos;
         }
     }
     return msg;
@@ -517,5 +533,9 @@ QString MessageFormatter::formatNames(const QStringList &names, Qt::TextFormat f
 
 void MessageFormatter::setNames(const QStringList& names)
 {
-    d.names = names.toSet();
+    d.names.clear();
+    foreach (const QString& name, names) {
+        if (!name.isEmpty())
+            d.names.insert(name.at(0), name);
+    }
 }

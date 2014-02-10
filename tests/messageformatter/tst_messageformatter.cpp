@@ -42,6 +42,10 @@ void tst_MessageFormatter::testFormatHtml_data()
     QTest::newRow("euirc") << QByteArray("euirc") << "#euirc"
                            << "Jerry: porttitor netsplit tristique. Aenean semper ligula eget nulla condimentum tempor in quis felis. Sed sem scaba, tincidunt amet sb."
                            << "<span class='message'><span class='timestamp'>[00:00:00]</span> &lt;<b><a href='nick:communi' style='text-decoration:none; color:#747474'>communi</a></b>&gt; <b><a href='nick:Jerry' style='text-decoration:none; color:#3fb731'>Jerry</a></b>: porttitor <b><a href='nick:netsplit' style='text-decoration:none; color:#31b757'>netsplit</a></b> tristique. Aenean semper ligula eget nulla condimentum tempor in quis felis. Sed sem <b><a href='nick:scaba' style='text-decoration:none; color:#b7ac31'>scaba</a></b>, tincidunt amet <b><a href='nick:sb' style='text-decoration:none; color:#9ab731'>sb</a></b>.</span>";
+
+    QTest::newRow("special chars") << QByteArray("freenode") << "#freenode"
+                                   << "[MortiKi] \\mSg Ricardo__ `- RDash[AW] s1lent_1"
+                                   << "<span class='message'><span class='timestamp'>[00:00:00]</span> &lt;<b><a href='nick:communi' style='text-decoration:none; color:#747474'>communi</a></b>&gt; <b><a href='nick:[MortiKi]' style='text-decoration:none; color:#3831b7'>[MortiKi]</a></b> <b><a href='nick:\\mSg' style='text-decoration:none; color:#4831b7'>\\mSg</a></b> <b><a href='nick:Ricardo__' style='text-decoration:none; color:#6db731'>Ricardo__</a></b> <b><a href='nick:`-' style='text-decoration:none; color:#31b772'>`-</a></b> <b><a href='nick:RDash[AW]' style='text-decoration:none; color:#b231b7'>RDash[AW]</a></b> <b><a href='nick:s1lent_1' style='text-decoration:none; color:#3176b7'>s1lent_1</a></b></span>";
 }
 
 void tst_MessageFormatter::testFormatHtml()

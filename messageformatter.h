@@ -29,7 +29,6 @@
 #ifndef MESSAGEFORMATTER_H
 #define MESSAGEFORMATTER_H
 
-#include <QSet>
 #include <QHash>
 #include <QColor>
 #include <QDateTime>
@@ -105,11 +104,11 @@ private:
         bool detailed;
         QColor baseColor;
         IrcBuffer* buffer;
-        QSet<QString> names;
         IrcUserModel* userModel;
         QString timeStampFormat;
         IrcTextFormat* textFormat;
         QHash<IrcBuffer*, bool> repeats;
+        QMultiHash<QChar, QString> names;
     } d;
 };
 
