@@ -67,8 +67,8 @@ public:
     void setDetailed(bool detailed);
 
     Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText);
-    QString formatLine(const QString& message, const QDateTime& timeStamp, Qt::TextFormat format);
-    QString formatContent(const QString& message, Qt::TextFormat format);
+    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText);
+    QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText);
 
 protected:
     QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format);
