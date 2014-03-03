@@ -478,10 +478,10 @@ QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat f
             const QChar c = msg.at(pos);
             if (!c.isSpace()) {
                 // do not format nicks within links
-                if (c == '&' && msg.midRef(pos, 6) == "&lt;a ") {
-                    const int end = msg.indexOf("&lt;/a>", pos + 6);
+                if (c == '<' && msg.midRef(pos, 3) == "<a ") {
+                    const int end = msg.indexOf("</a>", pos + 3);
                     if (end != -1) {
-                        pos = end + 7;
+                        pos = end + 4;
                         continue;
                     }
                 }
