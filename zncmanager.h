@@ -31,9 +31,10 @@
 
 #include <QObject>
 #include <QDateTime>
-#include <IrcBufferModel>
 #include <IrcMessageFilter>
 
+class IrcBuffer;
+class IrcBufferModel;
 class IrcNoticeMessage;
 class IrcPrivateMessage;
 
@@ -55,22 +56,17 @@ public:
 signals:
     void modelChanged(IrcBufferModel* model);
 
-    void playbackBegin(IrcBuffer* buffer);
-    void playbackEnd(IrcBuffer* buffer);
-
 protected:
-    bool processMessage(IrcPrivateMessage* message);
-    bool processNotice(IrcNoticeMessage* message);
+    bool processMessage(IrcBuffer* buffer, IrcPrivateMessage* message);
 
 private slots:
+    void requestPlayback();
     void requestCapabilities();
 
 private:
     mutable struct Private {
-        bool playback;
-        IrcBuffer* buffer;
-        IrcBufferModel* model;
         QDateTime timestamp;
+        IrcBufferModel* model;
     } d;
 };
 

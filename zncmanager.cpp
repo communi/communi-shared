@@ -28,15 +28,15 @@
 
 #include "zncmanager.h"
 #include "ignoremanager.h"
+#include <ircbuffermodel.h>
 #include <ircconnection.h>
+#include <irccommand.h>
 #include <ircmessage.h>
 #include <ircbuffer.h>
 
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
-    d.buffer = 0;
-    d.playback = false;
     d.timestamp = QDateTime::fromTime_t(0);
     setModel(qobject_cast<IrcBufferModel*>(parent));
 }
@@ -55,12 +55,14 @@ void ZncManager::setModel(IrcBufferModel* model)
     if (d.model != model) {
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
+            disconnect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
             disconnect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->removeMessageFilter(this);
         }
         d.model = model;
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
+            connect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
             connect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->installMessageFilter(this);
         }
@@ -71,56 +73,29 @@ void ZncManager::setModel(IrcBufferModel* model)
 bool ZncManager::messageFilter(IrcMessage* message)
 {
     if (message->tags().contains("time")) {
-        d.timestamp = message->tags().value("time").toDateTime();
-        if (d.timestamp.isValid())
-            message->setTimeStamp(d.timestamp.toTimeSpec(Qt::LocalTime));
+        QDateTime timestamp = message->tags().value("time").toDateTime();
+        if (timestamp.isValid()) {
+            message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
+            d.timestamp = qMax(timestamp, d.timestamp);
+        }
     }
 
     if (message->type() == IrcMessage::Private) {
-        if (message->nick() == QLatin1String("***")) {
-            IrcPrivateMessage* privMsg = static_cast<IrcPrivateMessage*>(message);
-            QString content = privMsg->content();
-            if (content == QLatin1String("Buffer Playback...")) {
-                d.playback = true;
-                d.buffer = d.model->find(privMsg->target());
-                if (d.buffer)
-                    emit playbackBegin(d.buffer);
-                return false;
-            } else if (content == QLatin1String("Playback Complete.")) {
-                if (d.buffer)
-                    emit playbackEnd(d.buffer);
-                d.playback = false;
-                d.buffer = 0;
-                return false;
-            }
-        }
-    } else if (message->type() == IrcMessage::Notice) {
-        if (message->nick() == "*communi") {
-            d.timestamp = QDateTime::fromTime_t(static_cast<IrcNoticeMessage*>(message)->content().toLong());
-            return true;
-        }
+        IrcPrivateMessage* msg = static_cast<IrcPrivateMessage*>(message);
+        IrcBuffer* buffer = d.model->find(msg->target());
+        if (buffer)
+            return processMessage(buffer, msg);
     }
-
-    if (d.playback && d.buffer) {
-        switch (message->type()) {
-        case IrcMessage::Private:
-            return processMessage(static_cast<IrcPrivateMessage*>(message));
-        case IrcMessage::Notice:
-            return processNotice(static_cast<IrcNoticeMessage*>(message));
-        default:
-            break;
-        }
-    }
-    return false;
+    return IgnoreManager::instance()->messageFilter(message);
 }
 
-bool ZncManager::processMessage(IrcPrivateMessage* message)
+bool ZncManager::processMessage(IrcBuffer* buffer, IrcPrivateMessage* message)
 {
-    QString msg = message->content();
     if (message->nick() == "*buffextras") {
-        int idx = msg.indexOf(" ");
-        QString prefix = msg.left(idx);
-        QString content = msg.mid(idx + 1);
+        const QString msg = message->content();
+        const int idx = msg.indexOf(" ");
+        const QString prefix = msg.left(idx);
+        const QString content = msg.mid(idx + 1);
 
         IrcMessage* tmp = 0;
         if (content.startsWith("joined")) {
@@ -134,15 +109,15 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
             reason.chop(1);
             tmp = IrcMessage::fromParameters(prefix, "QUIT", QStringList() << reason , message->connection());
         } else if (content.startsWith("is")) {
-            QStringList tokens = content.split(" ", QString::SkipEmptyParts);
+            const QStringList tokens = content.split(" ", QString::SkipEmptyParts);
             tmp = IrcMessage::fromParameters(prefix, "NICK", QStringList() << tokens.last() , message->connection());
         } else if (content.startsWith("set")) {
             QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-            QString user = tokens.takeLast();
-            QString mode = tokens.takeLast();
+            const QString user = tokens.takeLast();
+            const QString mode = tokens.takeLast();
             tmp = IrcMessage::fromParameters(prefix, "MODE", QStringList() << message->target() << mode << user, message->connection());
         } else if (content.startsWith("changed")) {
-            QString topic = content.mid(content.indexOf(":") + 2);
+            const QString topic = content.mid(content.indexOf(":") + 2);
             tmp = IrcMessage::fromParameters(prefix, "TOPIC", QStringList() << message->target() << topic, message->connection());
         } else if (content.startsWith("kicked")) {
             QString reason = content.mid(content.indexOf("[") + 1);
@@ -152,29 +127,18 @@ bool ZncManager::processMessage(IrcPrivateMessage* message)
         }
         if (tmp) {
             tmp->setTimeStamp(message->timeStamp());
-            d.buffer->receiveMessage(tmp);
+            buffer->receiveMessage(tmp);
             tmp->deleteLater();
             return true;
         }
     }
-
-    if (message->isAction())
-        msg = QString("\1ACTION %1\1").arg(msg);
-    else if (message->isRequest())
-        msg = QString("\1%1\1").arg(msg);
-    message->setParameters(QStringList() << message->target() << msg);
-
     return IgnoreManager::instance()->messageFilter(message);
 }
 
-bool ZncManager::processNotice(IrcNoticeMessage* message)
+void ZncManager::requestPlayback()
 {
-    QString msg = message->content();
-    if (message->isReply())
-        msg = QString("\1%1\1").arg(msg);
-    message->setParameters(QStringList() << message->target() << msg);
-
-    return IgnoreManager::instance()->messageFilter(message);
+    IrcConnection* connection = d.model->connection();
+    connection->sendCommand(IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0)));
 }
 
 void ZncManager::requestCapabilities()
@@ -182,8 +146,8 @@ void ZncManager::requestCapabilities()
     QStringList request;
     QStringList available = d.model->network()->availableCapabilities();
 
-    if (available.contains("communi"))
-        request << "communi" << QString("communi/%1").arg(d.timestamp.toTime_t());
+    if (available.contains("znc.in/playback"))
+        request << "znc.in/playback";
 
     if (available.contains("server-time"))
         request << "server-time";
