@@ -174,13 +174,6 @@ QString MessageFormatter::formatLine(const QString& message, const QDateTime& ti
     if (formatted.isEmpty())
         return QString();
 
-    if (!d.timeStampFormat.isEmpty()) {
-        if (format == Qt::RichText)
-            formatted = QCoreApplication::translate("MessageFormatter", "<span class='timestamp'>%1</span> %3").arg(timeStamp.time().toString(d.timeStampFormat), formatted);
-        else
-            formatted = QCoreApplication::translate("MessageFormatter", "%1 %2").arg(timeStamp.time().toString(d.timeStampFormat), formatted);
-    }
-
     if (format == Qt::RichText) {
         QString cls = "message";
         switch (formatted.at(0).unicode()) {
@@ -192,6 +185,14 @@ QString MessageFormatter::formatLine(const QString& message, const QDateTime& ti
         }
         formatted = QCoreApplication::translate("MessageFormatter", "<span class='%1'>%2</span>").arg(cls, formatted);
     }
+
+    if (!d.timeStampFormat.isEmpty()) {
+        if (format == Qt::RichText)
+            formatted = QCoreApplication::translate("MessageFormatter", "<span class='timestamp'>%1</span> %3").arg(timeStamp.time().toString(d.timeStampFormat), formatted);
+        else
+            formatted = QCoreApplication::translate("MessageFormatter", "%1 %2").arg(timeStamp.time().toString(d.timeStampFormat), formatted);
+    }
+
     return formatted;
 }
 
