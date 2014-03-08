@@ -137,8 +137,10 @@ bool ZncManager::processMessage(IrcBuffer* buffer, IrcPrivateMessage* message)
 
 void ZncManager::requestPlayback()
 {
-    IrcConnection* connection = d.model->connection();
-    connection->sendCommand(IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0)));
+    if (d.model->network()->isCapable("znc.in/playback")) {
+        IrcConnection* connection = d.model->connection();
+        connection->sendCommand(IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0)));
+    }
 }
 
 void ZncManager::requestCapabilities()
