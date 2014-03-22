@@ -345,6 +345,10 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
         case Irc::RPL_ENDOFNAMES:
             return QString();
 
+        case Irc::RPL_WELCOME:
+            d.repeats.clear();
+            // flow through
+
         default:
             if (Irc::codeToString(message->code()).startsWith("ERR_"))
                 return QCoreApplication::translate("MessageFormatter", "[ERROR] %1").arg(formatContent(MID_(1), format));
@@ -371,6 +375,7 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
 {
     const QString sender = formatNick(message->nick(), format, message->flags() & IrcMessage::Own);
     const QString msg = formatContent(message->content(), format);
+    d.repeats.insert(d.buffer, true);
     if (message->isAction())
         return QCoreApplication::translate("MessageFormatter", "* %1 %2").arg(message->nick(), msg);
     else if (message->isRequest())
