@@ -205,6 +205,8 @@ QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::Tex
 QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format)
 {
     const bool repeat = d.repeats.value(d.buffer);
+    if (message->flags() & IrcMessage::Own)
+        d.repeats.insert(d.buffer, false);
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->flags() & IrcMessage::Own);
     if (message->flags() & IrcMessage::Own && repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 rejoined %2").arg(sender, message->channel());
@@ -224,10 +226,9 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFor
 
 QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFormat format)
 {
-    const bool repeat = d.repeats.value(d.buffer);
     const QString sender = formatNick(message->nick(), format, message->flags() & IrcMessage::Own);
     if (message->isReply())
-        return !repeat ? QCoreApplication::translate("MessageFormatter", "! %1 mode is %2 %3").arg(message->target(), message->mode(), message->argument()) : QString();
+        return QCoreApplication::translate("MessageFormatter", "! %1 mode is %2 %3").arg(message->target(), message->mode(), message->argument());
     else
         return QCoreApplication::translate("MessageFormatter", "! %1 sets mode %2 %3").arg(sender, message->mode(), message->argument());
 }
@@ -235,6 +236,7 @@ QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFor
 QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format)
 {
     const bool repeat = d.repeats.value(d.buffer);
+    d.repeats.insert(d.buffer, true);
     if (!repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 has %2 users").arg(message->channel()).arg(message->names().count());
     QStringList names = message->names();
@@ -284,6 +286,8 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
                 return QCoreApplication::translate("MessageFormatter", "[MOTD] %1").arg(formatContent(MID_(1), format));
             return QString();
         case Irc::RPL_ENDOFMOTD:
+        case Irc::ERR_NOMOTD:
+            d.repeats.insert(d.buffer, true);
             if (repeat)
                 return QCoreApplication::translate("MessageFormatter", "! %1 reconnected").arg(d.buffer->connection()->nickName());
             return QString();
@@ -345,10 +349,6 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
         case Irc::RPL_ENDOFNAMES:
             return QString();
 
-        case Irc::RPL_WELCOME:
-            d.repeats.clear();
-            // flow through
-
         default:
             if (Irc::codeToString(message->code()).startsWith("ERR_"))
                 return QCoreApplication::translate("MessageFormatter", "[ERROR] %1").arg(formatContent(MID_(1), format));
@@ -375,7 +375,6 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
 {
     const QString sender = formatNick(message->nick(), format, message->flags() & IrcMessage::Own);
     const QString msg = formatContent(message->content(), format);
-    d.repeats.insert(d.buffer, true);
     if (message->isAction())
         return QCoreApplication::translate("MessageFormatter", "* %1 %2").arg(message->nick(), msg);
     else if (message->isRequest())
@@ -403,14 +402,13 @@ QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFor
 
 QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format)
 {
-    const bool repeat = d.repeats.value(d.buffer);
     const QString sender = formatNick(message->nick(), format, message->flags() & IrcMessage::Own);
     const QString topic = formatContent(message->topic(), format);
     const QString channel = message->channel();
     if (message->isReply()) {
         if (topic.isEmpty())
-            return !repeat ? QCoreApplication::translate("MessageFormatter", "! %1 has no topic set").arg(channel) : QString();
-        return !repeat ? QCoreApplication::translate("MessageFormatter", "! %1 topic is \"%2\"").arg(channel, topic) : QString();
+            return QCoreApplication::translate("MessageFormatter", "! %1 has no topic set").arg(channel);
+        return QCoreApplication::translate("MessageFormatter", "! %1 topic is \"%2\"").arg(channel, topic);
     }
     return QCoreApplication::translate("MessageFormatter", "! %1 sets topic \"%2\" on %3").arg(sender, topic, channel);
 }
