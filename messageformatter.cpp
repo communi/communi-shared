@@ -204,9 +204,9 @@ QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::Tex
 
 QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format)
 {
-    const bool repeat = d.repeats.value(d.buffer);
+    const bool repeat = d.repeats[format].value(d.buffer);
     if (message->isOwn())
-        d.repeats.insert(d.buffer, false);
+        d.repeats[format].insert(d.buffer, false);
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (message->isOwn() && repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 rejoined %2").arg(sender, message->channel());
@@ -235,8 +235,8 @@ QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFor
 
 QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format)
 {
-    const bool repeat = d.repeats.value(d.buffer);
-    d.repeats.insert(d.buffer, true);
+    const bool repeat = d.repeats[format].value(d.buffer);
+    d.repeats[format].insert(d.buffer, true);
     if (!repeat)
         return QCoreApplication::translate("MessageFormatter", "! %1 has %2 users").arg(message->channel()).arg(message->names().count());
     QStringList names = message->names();
@@ -275,7 +275,7 @@ QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::Tex
 
 QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format)
 {
-    const bool repeat = d.repeats.value(d.buffer);
+    const bool repeat = d.repeats[format].value(d.buffer);
     if (message->code() < 300)
         return !repeat ? QCoreApplication::translate("MessageFormatter", "[INFO] %1").arg(formatContent(MID_(1), format)) : QString();
 
@@ -287,7 +287,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
             return QString();
         case Irc::RPL_ENDOFMOTD:
         case Irc::ERR_NOMOTD:
-            d.repeats.insert(d.buffer, true);
+            d.repeats[format].insert(d.buffer, true);
             if (repeat)
                 return QCoreApplication::translate("MessageFormatter", "! %1 reconnected").arg(d.buffer->connection()->nickName());
             return QString();

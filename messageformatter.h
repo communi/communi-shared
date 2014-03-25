@@ -107,8 +107,8 @@ private:
         IrcUserModel* userModel;
         QString timeStampFormat;
         IrcTextFormat* textFormat;
-        QHash<IrcBuffer*, bool> repeats;
         QMultiHash<QChar, QString> names;
+        QHash<IrcBuffer*, bool> repeats[2];
     } d;
 };
 
