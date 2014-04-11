@@ -37,6 +37,7 @@
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
+    d.buffer = 0;
     d.timestamp = QDateTime::fromTime_t(0);
     setModel(qobject_cast<IrcBufferModel*>(parent));
 }
@@ -72,19 +73,33 @@ void ZncManager::setModel(IrcBufferModel* model)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
+    bool playback = false;
     if (message->tags().contains("time")) {
         QDateTime timestamp = message->tags().value("time").toDateTime();
         if (timestamp.isValid()) {
-            message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
+            timestamp = timestamp.toTimeSpec(Qt::LocalTime);
+            playback = timestamp < message->timeStamp();
+            message->setTimeStamp(timestamp);
             d.timestamp = qMax(timestamp, d.timestamp);
         }
+    }
+
+    if (!playback && d.buffer) {
+        emit playbackEnd(d.buffer);
+        d.buffer = 0;
     }
 
     if (message->type() == IrcMessage::Private) {
         IrcPrivateMessage* msg = static_cast<IrcPrivateMessage*>(message);
         IrcBuffer* buffer = d.model->find(msg->target());
-        if (buffer)
+        if (buffer) {
+            if (d.buffer != buffer) {
+                if (playback)
+                    emit playbackBegin(buffer);
+                d.buffer = buffer;
+            }
             return processMessage(buffer, msg);
+        }
     }
     return IgnoreManager::instance()->messageFilter(message);
 }
