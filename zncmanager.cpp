@@ -75,11 +75,10 @@ bool ZncManager::messageFilter(IrcMessage* message)
 {
     bool playback = false;
     if (message->tags().contains("time")) {
-        QDateTime timestamp = message->tags().value("time").toDateTime();
+        QDateTime timestamp = message->tags().value("time").toDateTime().toTimeSpec(Qt::LocalTime);
         if (timestamp.isValid()) {
-            timestamp = timestamp.toTimeSpec(Qt::LocalTime);
-            playback = timestamp < message->timeStamp();
             message->setTimeStamp(timestamp);
+            playback = timestamp < d.timestamp;
             d.timestamp = qMax(timestamp, d.timestamp);
         }
     }
@@ -94,9 +93,14 @@ bool ZncManager::messageFilter(IrcMessage* message)
         IrcBuffer* buffer = d.model->find(msg->target());
         if (buffer) {
             if (d.buffer != buffer) {
-                if (playback)
+                if (d.buffer) {
+                    emit playbackEnd(d.buffer);
+                    d.buffer = 0;
+                }
+                if (playback) {
                     emit playbackBegin(buffer);
-                d.buffer = buffer;
+                    d.buffer = buffer;
+                }
             }
             return processMessage(buffer, msg);
         }
