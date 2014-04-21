@@ -75,9 +75,9 @@ bool ZncManager::messageFilter(IrcMessage* message)
 {
     bool playback = false;
     if (message->tags().contains("time")) {
-        QDateTime timestamp = message->tags().value("time").toDateTime().toTimeSpec(Qt::LocalTime);
+        QDateTime timestamp = message->tags().value("time").toDateTime();
         if (timestamp.isValid()) {
-            message->setTimeStamp(timestamp);
+            message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
             playback = timestamp < d.timestamp;
             d.timestamp = qMax(timestamp, d.timestamp);
         }
