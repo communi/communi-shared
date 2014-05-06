@@ -34,6 +34,8 @@
 #include <ircmessage.h>
 #include <ircbuffer.h>
 
+IRC_USE_NAMESPACE
+
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;

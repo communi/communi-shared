@@ -30,6 +30,7 @@
 #include <IrcTextFormat>
 #include <IrcConnection>
 #include <IrcUserModel>
+#include <IrcMessage>
 #include <IrcPalette>
 #include <IrcChannel>
 #include <Irc>
@@ -38,6 +39,8 @@
 #include <QColor>
 #include <QCoreApplication>
 #include <QTextBoundaryFinder>
+
+IRC_USE_NAMESPACE
 
 MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
 {

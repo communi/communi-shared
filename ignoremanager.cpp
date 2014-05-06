@@ -32,6 +32,8 @@
 #include <qregexp.h>
 #include <irc.h>
 
+IRC_USE_NAMESPACE
+
 IgnoreManager* IgnoreManager::instance()
 {
     static IgnoreManager manager;

@@ -32,11 +32,25 @@
 #include <QHash>
 #include <QColor>
 #include <QDateTime>
-#include <IrcMessage>
-#include <IrcTextFormat>
+#include <IrcGlobal>
 
-class IrcBuffer;
-class IrcUserModel;
+IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
+IRC_FORWARD_DECLARE_CLASS(IrcUserModel)
+IRC_FORWARD_DECLARE_CLASS(IrcTextFormat)
+IRC_FORWARD_DECLARE_CLASS(IrcInviteMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcJoinMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcKickMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcModeMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNamesMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNickMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNumericMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcPartMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcPongMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcPrivateMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcQuitMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcTopicMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
 class MessageFormatter : public QObject
 {

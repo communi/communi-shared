@@ -31,10 +31,15 @@
 
 #include <QObject>
 #include <QPointer>
-#include <IrcMessage>
+#include <IrcGlobal>
 
-class IrcBuffer;
-class IrcBufferModel;
+IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
+IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
+IRC_FORWARD_DECLARE_CLASS(IrcInviteMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcNumericMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcPongMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
 class MessageHandler : public QObject
 {

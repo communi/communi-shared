@@ -33,8 +33,8 @@
 #include <QStringList>
 #include <IrcMessageFilter>
 
-class IrcMessage;
-class IrcConnection;
+IRC_FORWARD_DECLARE_CLASS(IrcMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcConnection)
 
 class IgnoreManager : public QObject, public IrcMessageFilter
 {

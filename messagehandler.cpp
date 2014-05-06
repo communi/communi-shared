@@ -33,6 +33,8 @@
 #include <IrcChannel>
 #include <IrcBuffer>
 
+IRC_USE_NAMESPACE
+
 MessageHandler::MessageHandler(QObject* parent) : QObject(parent)
 {
     setModel(qobject_cast<IrcBufferModel*>(parent));

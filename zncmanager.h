@@ -33,10 +33,11 @@
 #include <QDateTime>
 #include <IrcMessageFilter>
 
-class IrcBuffer;
-class IrcBufferModel;
-class IrcNoticeMessage;
-class IrcPrivateMessage;
+IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
+IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
+IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcPrivateMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
 class ZncManager : public QObject, public IrcMessageFilter
 {
