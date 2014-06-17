@@ -116,8 +116,12 @@ void MessageHandler::handleNoticeMessage(IrcNoticeMessage* message)
             int idx = msg.indexOf("]");
             if (idx != -1) {
                 const QString view = msg.mid(1, idx - 1);
-                if (d.model->contains(view))
+                if (d.model->contains(view)) {
+                    QStringList params = message->parameters();
+                    params.replace(0, view);
+                    message->setParameters(params);
                     target = view;
+                }
             }
         }
     }
