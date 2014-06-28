@@ -50,7 +50,7 @@ MessageFormatter::MessageFormatter(QObject* parent) : QObject(parent)
     d.timeStampFormat = "[hh:mm:ss]";
     d.textFormat = new IrcTextFormat(this);
     d.textFormat->setSpanFormat(IrcTextFormat::SpanClass);
-    d.baseColor = QColor::fromHsl(359, 102, 116);
+    d.baseColor = QColor::fromHsl(359, 102, 134);
 
     d.userModel = new IrcUserModel(this);
     connect(d.userModel, SIGNAL(namesChanged(QStringList)), this, SLOT(setNames(QStringList)));
