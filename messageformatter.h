@@ -80,34 +80,34 @@ public:
     bool isDetailed() const;
     void setDetailed(bool detailed);
 
-    Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText);
-    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText);
-    QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText);
+    Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText) const;
+    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
+    QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText) const;
 
 protected:
-    QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format);
-    QString formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format);
-    QString formatKickMessage(IrcKickMessage* message, Qt::TextFormat format);
-    QString formatModeMessage(IrcModeMessage* message, Qt::TextFormat format);
-    QString formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format);
-    QString formatNickMessage(IrcNickMessage* message, Qt::TextFormat format);
-    QString formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format);
-    QString formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format);
-    QString formatPartMessage(IrcPartMessage* message, Qt::TextFormat format);
-    QString formatPongMessage(IrcPongMessage* message, Qt::TextFormat format);
-    QString formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format);
-    QString formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format);
-    QString formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format);
-    QString formatUnknownMessage(IrcMessage* message, Qt::TextFormat format);
+    QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const;
+    QString formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format) const;
+    QString formatKickMessage(IrcKickMessage* message, Qt::TextFormat format) const;
+    QString formatModeMessage(IrcModeMessage* message, Qt::TextFormat format) const;
+    QString formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format) const;
+    QString formatNickMessage(IrcNickMessage* message, Qt::TextFormat format) const;
+    QString formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format) const;
+    QString formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format) const;
+    QString formatPartMessage(IrcPartMessage* message, Qt::TextFormat format) const;
+    QString formatPongMessage(IrcPongMessage* message, Qt::TextFormat format) const;
+    QString formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format) const;
+    QString formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format) const;
+    QString formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format) const;
+    QString formatUnknownMessage(IrcMessage* message, Qt::TextFormat format) const;
 
-    QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format);
+    QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format) const;
 
-    QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false);
-    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false);
+    QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false) const;
+    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false) const;
 
-    QString formatIdleTime(int secs);
+    QString formatIdleTime(int secs) const;
 
-    QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6);
+    QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6) const;
 
 private slots:
     void setNames(const QStringList& names);
@@ -122,7 +122,7 @@ private:
         QString timeStampFormat;
         IrcTextFormat* textFormat;
         QMultiHash<QChar, QString> names;
-        QHash<IrcBuffer*, bool> repeats[2];
+        mutable QHash<IrcBuffer*, bool> repeats[2];
     } d;
 };
 

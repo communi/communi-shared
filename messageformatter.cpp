@@ -119,7 +119,7 @@ void MessageFormatter::setDetailed(bool detailed)
     d.detailed = detailed;
 }
 
-QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat format) const
 {
     QString formatted;
     switch (message->type()) {
@@ -171,7 +171,7 @@ QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat form
     return formatLine(formatted, message->timeStamp(), format);
 }
 
-QString MessageFormatter::formatLine(const QString& message, const QDateTime& timeStamp, Qt::TextFormat format)
+QString MessageFormatter::formatLine(const QString& message, const QDateTime& timeStamp, Qt::TextFormat format) const
 {
     QString formatted = message;
     if (formatted.isEmpty())
@@ -199,13 +199,13 @@ QString MessageFormatter::formatLine(const QString& message, const QDateTime& ti
     return formatted;
 }
 
-QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const
 {
     const QString nick = formatNick(message->nick(), format);
     return QCoreApplication::translate("MessageFormatter", "! %1 invited to %3").arg(nick, message->channel());
 }
 
-QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format) const
 {
     const bool repeat = d.repeats[format].value(d.buffer);
     if (message->isOwn())
@@ -217,7 +217,7 @@ QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFor
         return QCoreApplication::translate("MessageFormatter", "! %1 joined %2").arg(sender, message->channel());
 }
 
-QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFormat format) const
 {
     const QString kicker = formatNick(message->nick(), format, message->isOwn());
     const QString user = formatNick(message->user(), format, !message->user().compare(message->connection()->nickName()));
@@ -227,7 +227,7 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFor
         return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2").arg(kicker, user);
 }
 
-QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     if (message->isReply())
@@ -236,7 +236,7 @@ QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFor
         return QCoreApplication::translate("MessageFormatter", "! %1 sets mode %2 %3").arg(sender, message->mode(), message->argument());
 }
 
-QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format) const
 {
     const bool repeat = d.repeats[format].value(d.buffer);
     d.repeats[format].insert(d.buffer, true);
@@ -247,14 +247,14 @@ QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextF
     return QCoreApplication::translate("MessageFormatter", "! %1 has %3 users: %2").arg(message->channel(), formatNames(names, format)).arg(names.count());
 }
 
-QString MessageFormatter::formatNickMessage(IrcNickMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatNickMessage(IrcNickMessage* message, Qt::TextFormat format) const
 {
     const QString oldNick = formatNick(message->oldNick(), format, message->isOwn());
     const QString newNick = formatNick(message->newNick(), format, message->isOwn());
     return QCoreApplication::translate("MessageFormatter", "! %1 changed nick to %2").arg(oldNick, newNick);
 }
 
-QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format) const
 {
     if (message->isReply()) {
         const QStringList params = message->content().split(" ", QString::SkipEmptyParts);
@@ -276,7 +276,7 @@ QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::Tex
 #define P_(x) message->parameters().value(x)
 #define MID_(x) QStringList(message->parameters().mid(x)).join(" ")
 
-QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format) const
 {
     const bool repeat = d.repeats[format].value(d.buffer);
     if (message->code() < 300)
@@ -360,7 +360,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
     }
 }
 
-QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (d.detailed && !message->reason().isEmpty())
@@ -369,12 +369,12 @@ QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFor
         return QCoreApplication::translate("MessageFormatter", "! %1 parted %2").arg(sender, message->channel());
 }
 
-QString MessageFormatter::formatPongMessage(IrcPongMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatPongMessage(IrcPongMessage* message, Qt::TextFormat format) const
 {
     return formatPingReply(message->prefix(), message->argument(), format);
 }
 
-QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     const QString msg = formatContent(message->content(), format);
@@ -386,7 +386,7 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
         return QCoreApplication::translate("MessageFormatter", "&lt;%1&gt; %2").arg(sender, msg);
 }
 
-QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (!message->reason().isEmpty()) {
@@ -403,7 +403,7 @@ QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFor
     return QCoreApplication::translate("MessageFormatter", "! %1 has quit").arg(sender);
 }
 
-QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     const QString topic = formatContent(message->topic(), format);
@@ -416,13 +416,13 @@ QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextF
     return QCoreApplication::translate("MessageFormatter", "! %1 sets topic \"%2\" on %3").arg(sender, topic, channel);
 }
 
-QString MessageFormatter::formatUnknownMessage(IrcMessage* message, Qt::TextFormat format)
+QString MessageFormatter::formatUnknownMessage(IrcMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format);
     return QCoreApplication::translate("MessageFormatter", "? %1 %2 %3").arg(sender, message->command(), message->parameters().join(" "));
 }
 
-QString MessageFormatter::formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format)
+QString MessageFormatter::formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format) const
 {
     bool ok;
     int seconds = arg.toInt(&ok);
@@ -434,7 +434,7 @@ QString MessageFormatter::formatPingReply(const QString& nick, const QString& ar
     return QString();
 }
 
-QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format, bool own)
+QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format, bool own) const
 {
     if (format == Qt::PlainText)
         return nick;
@@ -444,7 +444,7 @@ QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format,
     return QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(nick);
 }
 
-QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip, bool own)
+QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip, bool own) const
 {
     QString nick = formatNick(Irc::nickFromPrefix(prefix), format, own);
     if (!strip) {
@@ -456,7 +456,7 @@ QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat for
     return nick;
 }
 
-QString MessageFormatter::formatIdleTime(int secs)
+QString MessageFormatter::formatIdleTime(int secs) const
 {
     QStringList idle;
     if (int days = secs / 86400)
@@ -471,7 +471,7 @@ QString MessageFormatter::formatIdleTime(int secs)
     return idle.join(" ");
 }
 
-QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat format)
+QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat format) const
 {
     if (format == Qt::PlainText)
         return d.textFormat->toPlainText(message);
@@ -494,8 +494,8 @@ QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat f
                 // test word start boundary
                 finder.setPosition(pos);
                 if (finder.isAtBoundary()) {
-                    QMultiHash<QChar, QString>::iterator it = d.names.find(c);
-                    while (it != d.names.end() && it.key() == c) {
+                    QMultiHash<QChar, QString>::const_iterator it = d.names.find(c);
+                    while (it != d.names.constEnd() && it.key() == c) {
                         const QString& user = it.value();
                         if (msg.midRef(pos, user.length()) == user) {
                             // test word end boundary
@@ -517,7 +517,7 @@ QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat f
     return msg;
 }
 
-QString MessageFormatter::formatNames(const QStringList &names, Qt::TextFormat format, int columns)
+QString MessageFormatter::formatNames(const QStringList &names, Qt::TextFormat format, int columns) const
 {
     if (format == Qt::PlainText)
         return names.join(" ");
