@@ -109,6 +109,8 @@ protected:
 
     QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6) const;
 
+    QString messagePrefix(IrcMessage* message) const;
+
 private slots:
     void setNames(const QStringList& names);
 

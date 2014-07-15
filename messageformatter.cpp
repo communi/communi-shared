@@ -168,6 +168,11 @@ QString MessageFormatter::formatMessage(IrcMessage* message, Qt::TextFormat form
         default:
             break;
     }
+    if (format == Qt::RichText && !formatted.isEmpty()) {
+        const QString prefix = messagePrefix(message);
+        if (!prefix.isEmpty())
+            formatted.prepend(prefix + " ");
+    }
     return formatLine(formatted, message->timeStamp(), format);
 }
 
@@ -202,7 +207,7 @@ QString MessageFormatter::formatLine(const QString& message, const QDateTime& ti
 QString MessageFormatter::formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const
 {
     const QString nick = formatNick(message->nick(), format);
-    return QCoreApplication::translate("MessageFormatter", "! %1 invited to %3").arg(nick, message->channel());
+    return QCoreApplication::translate("MessageFormatter", "%1 invited to %3").arg(nick, message->channel());
 }
 
 QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format) const
@@ -212,9 +217,9 @@ QString MessageFormatter::formatJoinMessage(IrcJoinMessage* message, Qt::TextFor
         d.repeats[format].insert(d.buffer, false);
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (message->isOwn() && repeat)
-        return QCoreApplication::translate("MessageFormatter", "! %1 rejoined %2").arg(sender, message->channel());
+        return QCoreApplication::translate("MessageFormatter", "%1 rejoined %2").arg(sender, message->channel());
     else
-        return QCoreApplication::translate("MessageFormatter", "! %1 joined %2").arg(sender, message->channel());
+        return QCoreApplication::translate("MessageFormatter", "%1 joined %2").arg(sender, message->channel());
 }
 
 QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFormat format) const
@@ -222,18 +227,18 @@ QString MessageFormatter::formatKickMessage(IrcKickMessage* message, Qt::TextFor
     const QString kicker = formatNick(message->nick(), format, message->isOwn());
     const QString user = formatNick(message->user(), format, !message->user().compare(message->connection()->nickName()));
     if (d.detailed && !message->reason().isEmpty())
-        return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2 (%3)").arg(kicker, user, message->reason());
+        return QCoreApplication::translate("MessageFormatter", "%1 kicked %2 (%3)").arg(kicker, user, message->reason());
     else
-        return QCoreApplication::translate("MessageFormatter", "! %1 kicked %2").arg(kicker, user);
+        return QCoreApplication::translate("MessageFormatter", "%1 kicked %2").arg(kicker, user);
 }
 
 QString MessageFormatter::formatModeMessage(IrcModeMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     if (message->isReply())
-        return QCoreApplication::translate("MessageFormatter", "! %1 mode is %2 %3").arg(message->target(), message->mode(), message->argument());
+        return QCoreApplication::translate("MessageFormatter", "%1 mode is %2 %3").arg(message->target(), message->mode(), message->argument());
     else
-        return QCoreApplication::translate("MessageFormatter", "! %1 sets mode %2 %3").arg(sender, message->mode(), message->argument());
+        return QCoreApplication::translate("MessageFormatter", "%1 sets mode %2 %3").arg(sender, message->mode(), message->argument());
 }
 
 QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format) const
@@ -241,17 +246,17 @@ QString MessageFormatter::formatNamesMessage(IrcNamesMessage* message, Qt::TextF
     const bool repeat = d.repeats[format].value(d.buffer);
     d.repeats[format].insert(d.buffer, true);
     if (!repeat)
-        return QCoreApplication::translate("MessageFormatter", "! %1 has %2 users").arg(message->channel()).arg(message->names().count());
+        return QCoreApplication::translate("MessageFormatter", "%1 has %2 users").arg(message->channel()).arg(message->names().count());
     QStringList names = message->names();
     qSort(names);
-    return QCoreApplication::translate("MessageFormatter", "! %1 has %3 users: %2").arg(message->channel(), formatNames(names, format)).arg(names.count());
+    return QCoreApplication::translate("MessageFormatter", "%1 has %3 users: %2").arg(message->channel(), formatNames(names, format)).arg(names.count());
 }
 
 QString MessageFormatter::formatNickMessage(IrcNickMessage* message, Qt::TextFormat format) const
 {
     const QString oldNick = formatNick(message->oldNick(), format, message->isOwn());
     const QString newNick = formatNick(message->newNick(), format, message->isOwn());
-    return QCoreApplication::translate("MessageFormatter", "! %1 changed nick to %2").arg(oldNick, newNick);
+    return QCoreApplication::translate("MessageFormatter", "%1 changed nick to %2").arg(oldNick, newNick);
 }
 
 QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format) const
@@ -263,14 +268,16 @@ QString MessageFormatter::formatNoticeMessage(IrcNoticeMessage* message, Qt::Tex
         if (cmd.toUpper() == "PING")
             return formatPingReply(message->nick(), arg, format);
         else if (cmd.toUpper() == "TIME")
-            return QCoreApplication::translate("MessageFormatter", "! %1 time is %2").arg(formatNick(message->nick(), format), QStringList(params.mid(1)).join(" "));
+            return QCoreApplication::translate("MessageFormatter", "%1 time is %2").arg(formatNick(message->nick(), format), QStringList(params.mid(1)).join(" "));
         else if (cmd.toUpper() == "VERSION")
-            return QCoreApplication::translate("MessageFormatter", "! %1 version is %2").arg(formatNick(message->nick(), format), QStringList(params.mid(1)).join(" "));
+            return QCoreApplication::translate("MessageFormatter", "%1 version is %2").arg(formatNick(message->nick(), format), QStringList(params.mid(1)).join(" "));
     }
 
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     const QString msg = formatContent(message->content(), format);
-    return QCoreApplication::translate("MessageFormatter", "[%1] %2").arg(sender, msg);
+    if (format == Qt::RichText)
+        return QCoreApplication::translate("MessageFormatter", "[%1] %2").arg(sender, msg);
+    return msg;
 }
 
 #define P_(x) message->parameters().value(x)
@@ -280,22 +287,22 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
 {
     const bool repeat = d.repeats[format].value(d.buffer);
     if (message->code() < 300)
-        return !repeat ? QCoreApplication::translate("MessageFormatter", "[INFO] %1").arg(formatContent(MID_(1), format)) : QString();
+        return !repeat ? formatContent(MID_(1), format) : QString();
 
     switch (message->code()) {
         case Irc::RPL_MOTDSTART:
         case Irc::RPL_MOTD:
             if (!repeat)
-                return QCoreApplication::translate("MessageFormatter", "[MOTD] %1").arg(formatContent(MID_(1), format));
+                return formatContent(MID_(1), format);
             return QString();
         case Irc::RPL_ENDOFMOTD:
         case Irc::ERR_NOMOTD:
             d.repeats[format].insert(d.buffer, true);
             if (repeat)
-                return QCoreApplication::translate("MessageFormatter", "! %1 reconnected").arg(d.buffer->connection()->nickName());
+                return QCoreApplication::translate("MessageFormatter", "%1 reconnected").arg(d.buffer->connection()->nickName());
             return QString();
         case Irc::RPL_AWAY:
-            return QCoreApplication::translate("MessageFormatter", "! %1 is away (%2)").arg(P_(1), MID_(2));
+            return QCoreApplication::translate("MessageFormatter", "%1 is away (%2)").arg(P_(1), MID_(2));
         case Irc::RPL_ENDOFWHOIS:
             return QString();
         case Irc::RPL_WHOISOPERATOR:
@@ -305,47 +312,47 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
         case Irc::RPL_WHOISSPECIAL: // "is identified to services"
         case Irc::RPL_WHOISHOST: // nick is connecting from <...>
         case Irc::RPL_WHOISSECURE: // nick is using a secure connection
-            return QCoreApplication::translate("MessageFormatter", "! %1").arg(MID_(1));
+            return MID_(1);
         case Irc::RPL_WHOISUSER:
-            return QCoreApplication::translate("MessageFormatter", "! %1 is %2@%3 (%4)").arg(P_(1), P_(2), P_(3), formatContent(MID_(5), format));
+            return QCoreApplication::translate("MessageFormatter", "%1 is %2@%3 (%4)").arg(P_(1), P_(2), P_(3), formatContent(MID_(5), format));
         case Irc::RPL_WHOISSERVER:
-            return QCoreApplication::translate("MessageFormatter", "! %1 connected via %2 (%3)").arg(P_(1), P_(2), P_(3));
+            return QCoreApplication::translate("MessageFormatter", "%1 connected via %2 (%3)").arg(P_(1), P_(2), P_(3));
         case Irc::RPL_WHOISACCOUNT: // nick user is logged in as
-            return QCoreApplication::translate("MessageFormatter", "! %1 %3 %2").arg(P_(1), P_(2), P_(3));
+            return QCoreApplication::translate("MessageFormatter", "%1 %3 %2").arg(P_(1), P_(2), P_(3));
         case Irc::RPL_WHOWASUSER:
-            return QCoreApplication::translate("MessageFormatter", "! %1 was %2@%3 %4 %5").arg(P_(1), P_(2), P_(3), P_(4), P_(5));
+            return QCoreApplication::translate("MessageFormatter", "%1 was %2@%3 %4 %5").arg(P_(1), P_(2), P_(3), P_(4), P_(5));
         case Irc::RPL_WHOISIDLE: {
             QDateTime signon = QDateTime::fromTime_t(P_(3).toInt());
             QString idle = formatIdleTime(P_(2).toInt());
-            return QCoreApplication::translate("MessageFormatter", "! %1 has been online since %2 (idle for %3)").arg(P_(1), signon.toString(), idle);
+            return QCoreApplication::translate("MessageFormatter", "%1 has been online since %2 (idle for %3)").arg(P_(1), signon.toString(), idle);
         }
         case Irc::RPL_WHOISCHANNELS:
-            return QCoreApplication::translate("MessageFormatter", "! %1 is on channels %2").arg(P_(1), P_(2));
+            return QCoreApplication::translate("MessageFormatter", "%1 is on channels %2").arg(P_(1), P_(2));
 
         case Irc::RPL_CHANNEL_URL:
-            return !repeat ? QCoreApplication::translate("MessageFormatter", "! %1 url is %2").arg(P_(1), formatContent(P_(2), format)) : QString();
+            return !repeat ? QCoreApplication::translate("MessageFormatter", "%1 url is %2").arg(P_(1), formatContent(P_(2), format)) : QString();
         case Irc::RPL_CREATIONTIME:
             if (!repeat) {
                 QDateTime dateTime = QDateTime::fromTime_t(P_(2).toInt());
-                return QCoreApplication::translate("MessageFormatter", "! %1 was created %2").arg(P_(1), dateTime.toString());
+                return QCoreApplication::translate("MessageFormatter", "%1 was created %2").arg(P_(1), dateTime.toString());
             }
             return QString();
         case Irc::RPL_TOPICWHOTIME:
             if (!repeat) {
                 QDateTime dateTime = QDateTime::fromTime_t(P_(3).toInt());
-                return QCoreApplication::translate("MessageFormatter", "! %1 topic was set %2 by %3").arg(P_(1), dateTime.toString(), formatPrefix(P_(2), format, d.strip));
+                return QCoreApplication::translate("MessageFormatter", "%1 topic was set %2 by %3").arg(P_(1), dateTime.toString(), formatPrefix(P_(2), format, d.strip));
             }
             return QString();
 
         case Irc::RPL_INVITING:
-            return QCoreApplication::translate("MessageFormatter", "! inviting %1 to %2").arg(formatNick(P_(1), format), P_(2));
+            return QCoreApplication::translate("MessageFormatter", "inviting %1 to %2").arg(formatNick(P_(1), format), P_(2));
         case Irc::RPL_VERSION:
-            return QCoreApplication::translate("MessageFormatter", "! %1 version is %2").arg(formatNick(message->nick(), format), P_(1));
+            return QCoreApplication::translate("MessageFormatter", "%1 version is %2").arg(formatNick(message->nick(), format), P_(1));
         case Irc::RPL_TIME:
-            return QCoreApplication::translate("MessageFormatter", "! %1 time is %2").arg(formatNick(P_(1), format), P_(2));
+            return QCoreApplication::translate("MessageFormatter", "%1 time is %2").arg(formatNick(P_(1), format), P_(2));
         case Irc::RPL_UNAWAY:
         case Irc::RPL_NOWAWAY:
-            return QCoreApplication::translate("MessageFormatter", "! %1").arg(P_(1));
+            return P_(1);
 
         case Irc::RPL_TOPIC:
         case Irc::RPL_NAMREPLY:
@@ -353,10 +360,7 @@ QString MessageFormatter::formatNumericMessage(IrcNumericMessage* message, Qt::T
             return QString();
 
         default:
-            if (Irc::codeToString(message->code()).startsWith("ERR_"))
-                return QCoreApplication::translate("MessageFormatter", "[ERROR] %1").arg(formatContent(MID_(1), format));
-
-            return QCoreApplication::translate("MessageFormatter", "[%1] %2").arg(message->code()).arg(QStringList(message->parameters().mid(1)).join(" "));
+            return formatContent(MID_(1), format);
     }
 }
 
@@ -364,9 +368,9 @@ QString MessageFormatter::formatPartMessage(IrcPartMessage* message, Qt::TextFor
 {
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (d.detailed && !message->reason().isEmpty())
-        return QCoreApplication::translate("MessageFormatter", "! %1 parted %2 (%3)").arg(sender, message->channel(), formatContent(message->reason(), format));
+        return QCoreApplication::translate("MessageFormatter", "%1 parted %2 (%3)").arg(sender, message->channel(), formatContent(message->reason(), format));
     else
-        return QCoreApplication::translate("MessageFormatter", "! %1 parted %2").arg(sender, message->channel());
+        return QCoreApplication::translate("MessageFormatter", "%1 parted %2").arg(sender, message->channel());
 }
 
 QString MessageFormatter::formatPongMessage(IrcPongMessage* message, Qt::TextFormat format) const
@@ -379,11 +383,12 @@ QString MessageFormatter::formatPrivateMessage(IrcPrivateMessage* message, Qt::T
     const QString sender = formatNick(message->nick(), format, message->isOwn());
     const QString msg = formatContent(message->content(), format);
     if (message->isAction())
-        return QCoreApplication::translate("MessageFormatter", "* %1 %2").arg(message->nick(), msg);
+        return QCoreApplication::translate("MessageFormatter", "%1 %2").arg(message->nick(), msg);
     else if (message->isRequest())
-        return QCoreApplication::translate("MessageFormatter", "! %1 requested %2").arg(sender, msg.split(" ").value(0).toLower());
-    else
+        return QCoreApplication::translate("MessageFormatter", "%1 requested %2").arg(sender, msg.split(" ").value(0).toLower());
+    else if (format == Qt::RichText)
         return QCoreApplication::translate("MessageFormatter", "&lt;%1&gt; %2").arg(sender, msg);
+    return msg;
 }
 
 QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format) const
@@ -391,16 +396,16 @@ QString MessageFormatter::formatQuitMessage(IrcQuitMessage* message, Qt::TextFor
     const QString sender = formatPrefix(message->prefix(), format, d.strip, message->isOwn());
     if (!message->reason().isEmpty()) {
         if (d.detailed)
-            return QCoreApplication::translate("MessageFormatter", "! %1 has quit (%2)").arg(sender, formatContent(message->reason(), format));
+            return QCoreApplication::translate("MessageFormatter", "%1 has quit (%2)").arg(sender, formatContent(message->reason(), format));
         QString reason = message->reason();
         if (reason.contains("Ping timeout"))
-            return QCoreApplication::translate("MessageFormatter", "! %1 has timed out").arg(sender);
+            return QCoreApplication::translate("MessageFormatter", "%1 has timed out").arg(sender);
         if (reason.contains("Remote host closed the connection"))
-            return QCoreApplication::translate("MessageFormatter", "! %1 has disconnected").arg(sender);
+            return QCoreApplication::translate("MessageFormatter", "%1 has disconnected").arg(sender);
         if (reason.contains("Connection reset by peer"))
-            return QCoreApplication::translate("MessageFormatter", "! %1 has lost connection").arg(sender);
+            return QCoreApplication::translate("MessageFormatter", "%1 has lost connection").arg(sender);
     }
-    return QCoreApplication::translate("MessageFormatter", "! %1 has quit").arg(sender);
+    return QCoreApplication::translate("MessageFormatter", "%1 has quit").arg(sender);
 }
 
 QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format) const
@@ -410,16 +415,16 @@ QString MessageFormatter::formatTopicMessage(IrcTopicMessage* message, Qt::TextF
     const QString channel = message->channel();
     if (message->isReply()) {
         if (topic.isEmpty())
-            return QCoreApplication::translate("MessageFormatter", "! %1 has no topic set").arg(channel);
-        return QCoreApplication::translate("MessageFormatter", "! %1 topic is \"%2\"").arg(channel, topic);
+            return QCoreApplication::translate("MessageFormatter", "%1 has no topic set").arg(channel);
+        return QCoreApplication::translate("MessageFormatter", "%1 topic is \"%2\"").arg(channel, topic);
     }
-    return QCoreApplication::translate("MessageFormatter", "! %1 sets topic \"%2\" on %3").arg(sender, topic, channel);
+    return QCoreApplication::translate("MessageFormatter", "%1 sets topic \"%2\" on %3").arg(sender, topic, channel);
 }
 
 QString MessageFormatter::formatUnknownMessage(IrcMessage* message, Qt::TextFormat format) const
 {
     const QString sender = formatNick(message->nick(), format);
-    return QCoreApplication::translate("MessageFormatter", "? %1 %2 %3").arg(sender, message->command(), message->parameters().join(" "));
+    return QCoreApplication::translate("MessageFormatter", "%1 %2 %3").arg(sender, message->command(), message->parameters().join(" "));
 }
 
 QString MessageFormatter::formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format) const
@@ -429,7 +434,7 @@ QString MessageFormatter::formatPingReply(const QString& nick, const QString& ar
     if (ok) {
         QDateTime time = QDateTime::fromTime_t(seconds);
         QString result = QString::number(time.secsTo(QDateTime::currentDateTime()));
-        return QCoreApplication::translate("MessageFormatter", "! %1 replied in %2s").arg(formatNick(nick, format), result);
+        return QCoreApplication::translate("MessageFormatter", "%1 replied in %2s").arg(formatNick(nick, format), result);
     }
     return QString();
 }
@@ -537,6 +542,68 @@ QString MessageFormatter::formatNames(const QStringList &names, Qt::TextFormat f
     }
     message += "</table>";
     return message;
+}
+
+QString MessageFormatter::messagePrefix(IrcMessage* message) const
+{
+    switch (message->type()) {
+        case IrcMessage::Private:
+            if (IrcPrivateMessage* priv = static_cast<IrcPrivateMessage*>(message)) {
+                if (priv->isAction())
+                    return tr("*");
+                if (priv->isRequest())
+                    return tr("!");
+            }
+            return QString();
+        case IrcMessage::Notice:
+            if (IrcNoticeMessage* notice = static_cast<IrcNoticeMessage*>(message)) {
+                if (notice->isReply())
+                    return tr("!");
+            }
+            return QString();
+        case IrcMessage::Numeric:
+            if (static_cast<IrcNumericMessage*>(message)->code() < 300)
+                return tr("[INFO]");
+            if (Irc::codeToString(static_cast<IrcNumericMessage*>(message)->code()).startsWith("ERR_"))
+                return tr("[ERROR]");
+            switch (static_cast<IrcNumericMessage*>(message)->code()) {
+                case Irc::RPL_MOTDSTART:
+                case Irc::RPL_MOTD:
+                    return tr("[MOTD]");
+                case Irc::RPL_ENDOFMOTD:
+                case Irc::ERR_NOMOTD:
+                case Irc::RPL_AWAY:
+                case Irc::RPL_WHOISOPERATOR:
+                case Irc::RPL_WHOISMODES:
+                case Irc::RPL_WHOISREGNICK:
+                case Irc::RPL_WHOISHELPOP:
+                case Irc::RPL_WHOISSPECIAL:
+                case Irc::RPL_WHOISHOST:
+                case Irc::RPL_WHOISSECURE:
+                case Irc::RPL_WHOISUSER:
+                case Irc::RPL_WHOISSERVER:
+                case Irc::RPL_WHOISACCOUNT:
+                case Irc::RPL_WHOWASUSER:
+                case Irc::RPL_WHOISIDLE:
+                case Irc::RPL_WHOISCHANNELS:
+                case Irc::RPL_CHANNEL_URL:
+                case Irc::RPL_CREATIONTIME:
+                case Irc::RPL_TOPICWHOTIME:
+                case Irc::RPL_INVITING:
+                case Irc::RPL_VERSION:
+                case Irc::RPL_TIME:
+                case Irc::RPL_UNAWAY:
+                case Irc::RPL_NOWAWAY:
+                    return tr("!");
+                default:
+                    break;
+            }
+            return tr("[%1]").arg(static_cast<IrcNumericMessage*>(message)->code());
+        case IrcMessage::Unknown:
+            return tr("?");
+        default:
+            return tr("!");
+    }
 }
 
 void MessageFormatter::setNames(const QStringList& names)
