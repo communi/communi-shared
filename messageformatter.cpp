@@ -473,10 +473,11 @@ QString MessageFormatter::formatIdleTime(int secs) const
 
 QString MessageFormatter::formatContent(const QString& message, Qt::TextFormat format) const
 {
+    d.textFormat->parse(message);
     if (format == Qt::PlainText)
-        return d.textFormat->toPlainText(message);
+        return d.textFormat->plainText();
 
-    QString msg = d.textFormat->toHtml(message);
+    QString msg = d.textFormat->html();
     if (!d.names.isEmpty()) {
         QTextBoundaryFinder finder = QTextBoundaryFinder(QTextBoundaryFinder::Word, msg);
         int pos = 0;
