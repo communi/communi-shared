@@ -61,6 +61,7 @@ void ZncManager::setModel(IrcBufferModel* model)
             disconnect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
             disconnect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->removeMessageFilter(this);
+            disconnect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
         }
         d.model = model;
         if (d.model && d.model->connection()) {
@@ -68,6 +69,7 @@ void ZncManager::setModel(IrcBufferModel* model)
             connect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
             connect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->installMessageFilter(this);
+            connect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
         }
         emit modelChanged(model);
     }
@@ -181,4 +183,10 @@ void ZncManager::requestCapabilities()
 
     if (!request.isEmpty())
         d.model->network()->requestCapabilities(request);
+}
+
+void ZncManager::clearBuffer(IrcBuffer* buffer)
+{
+    if (d.model->network()->isCapable("znc.in/playback"))
+        buffer->sendCommand(IrcCommand::createMessage("*playback", QString("CLEAR %1").arg(buffer->title())));
 }

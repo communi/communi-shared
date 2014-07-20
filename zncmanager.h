@@ -65,6 +65,7 @@ protected:
 private slots:
     void requestPlayback();
     void requestCapabilities();
+    void clearBuffer(IrcBuffer* buffer);
 
 private:
     mutable struct Private {
