@@ -187,6 +187,6 @@ void ZncManager::requestCapabilities()
 
 void ZncManager::clearBuffer(IrcBuffer* buffer)
 {
-    if (d.model->network()->isCapable("znc.in/playback"))
+    if (d.model->network()->isCapable("znc.in/playback") && !buffer->title().contains("*"))
         buffer->sendCommand(IrcCommand::createMessage("*playback", QString("CLEAR %1").arg(buffer->title())));
 }
