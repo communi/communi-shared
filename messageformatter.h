@@ -80,6 +80,7 @@ public:
     QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
     QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText) const;
     QString formatEvents(const QList<int>& types, const QStringList& prefixes, const QStringList& lines, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
+    QString formatTimestamp(const QString& message, const QDateTime& timestamp, Qt::TextFormat format = Qt::RichText) const;
 
 protected:
     QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const;
