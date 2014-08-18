@@ -103,7 +103,7 @@ protected:
     QString formatNick(const QString& nick, Qt::TextFormat format = Qt::RichText, bool own = false) const;
     QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool own = false) const;
 
-    QString formatAnchor(const QString& anchor, const QString& fragment) const;
+    QString formatAnchor(const QString& anchor, const QString& fragment, bool highlight = false) const;
 
     QString formatIdleTime(int secs) const;
 

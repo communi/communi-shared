@@ -464,10 +464,7 @@ QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format,
 {
     if (format == Qt::PlainText)
         return nick;
-    int h = qHash(nick) % 359;
-    int s = own ? 0 : d.baseColor.saturation();
-    int l = d.baseColor.lightness();
-    return QString("<b><a href='nick:%2' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(nick);
+    return formatAnchor(nick, QString(), !own);
 }
 
 QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat format, bool own) const
@@ -478,18 +475,20 @@ QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat for
         QString host = Irc::hostFromPrefix(prefix);
         if (!ident.isEmpty() && !host.isEmpty()) {
             QString fragment = tr("%1 (%2@%3)").arg(nick, ident, host);
-            return formatAnchor(nick, fragment);
+            return formatAnchor(nick, fragment, !own);
         }
     }
     return formatNick(Irc::nickFromPrefix(prefix), format, own);
 }
 
-QString MessageFormatter::formatAnchor(const QString& anchor, const QString& fragment) const
+QString MessageFormatter::formatAnchor(const QString& anchor, const QString& fragment, bool highlight) const
 {
     int h = qHash(anchor) % 359;
-    int s = d.baseColor.saturation();
+    int s = highlight ? d.baseColor.saturation() : 0;
     int l = d.baseColor.lightness();
-    return QString("<b><a href='nick:%2#%3' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor).arg(fragment);
+    if (!fragment.isEmpty())
+        return QString("<b><a href='nick:%2#%3' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor).arg(fragment);
+    return QString("<b style='text-decoration:none; color:%1'>%2</b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor);
 }
 
 QString MessageFormatter::formatIdleTime(int secs) const
