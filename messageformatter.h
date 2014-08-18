@@ -56,7 +56,6 @@ class MessageFormatter : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor)
-    Q_PROPERTY(bool stripNicks READ stripNicks WRITE setStripNicks)
     Q_PROPERTY(bool detailed READ isDetailed WRITE setDetailed)
 
 public:
@@ -74,15 +73,13 @@ public:
     QColor baseColor() const;
     void setBaseColor(const QColor& color);
 
-    bool stripNicks() const;
-    void setStripNicks(bool strip);
-
     bool isDetailed() const;
     void setDetailed(bool detailed);
 
     Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText) const;
     QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
     QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText) const;
+    QString formatEvents(const QList<int>& types, const QStringList& prefixes, const QStringList& lines, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
 
 protected:
     QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const;
@@ -102,8 +99,10 @@ protected:
 
     QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format) const;
 
-    QString formatNick(const QString& nick, Qt::TextFormat format, bool own = false) const;
-    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool strip = true, bool own = false) const;
+    QString formatNick(const QString& nick, Qt::TextFormat format = Qt::RichText, bool own = false) const;
+    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool own = false) const;
+
+    QString formatAnchor(const QString& anchor, const QString& fragment) const;
 
     QString formatIdleTime(int secs) const;
 
@@ -116,7 +115,6 @@ private slots:
 
 private:
     struct Private {
-        bool strip;
         bool detailed;
         QColor baseColor;
         IrcBuffer* buffer;
