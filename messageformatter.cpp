@@ -453,7 +453,7 @@ QString MessageFormatter::formatEvents(const QList<int>& types, const QStringLis
     if (prefixes.count() == 1)
         line += tr("%1 has").arg(formatPrefix(prefixes.first(), format));
     else
-        line += formatAnchor(tr("%1 users").arg(prefixes.count()), lines.join(tr("<br/>")).toUtf8().toBase64()) + tr(" ") + tr("have");
+        line += formatAnchor(tr("%1 users").arg(prefixes.count()), lines.join(tr("<br/>"))) + tr(" ") + tr("have");
 
     line += tr(" ") + actions.join(tr(" and "));
 
@@ -487,7 +487,7 @@ QString MessageFormatter::formatAnchor(const QString& anchor, const QString& fra
     int s = highlight ? d.baseColor.saturation() : 0;
     int l = d.baseColor.lightness();
     if (!fragment.isEmpty())
-        return QString("<b><a href='nick:%2#%3' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor).arg(fragment);
+        return QString("<b><a href='nick:%2#%3' style='text-decoration:none; color:%1'>%2</a></b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor).arg(QString::fromUtf8(fragment.toUtf8().toBase64()));
     return QString("<b style='text-decoration:none; color:%1'>%2</b>").arg(QColor::fromHsl(h, s, l).name()).arg(anchor);
 }
 
