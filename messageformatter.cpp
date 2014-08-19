@@ -453,7 +453,7 @@ QString MessageFormatter::formatEvents(const QList<int>& types, const QStringLis
     if (prefixes.count() == 1)
         line += tr("%1 has").arg(formatPrefix(prefixes.first(), format));
     else
-        line += formatAnchor(tr("%1 users").arg(prefixes.count()), lines.join(tr("<br/>")).toUtf8().toPercentEncoding()) + tr(" ") + tr("have");
+        line += formatAnchor(tr("%1 users").arg(prefixes.count()), lines.join(tr("<br/>")).toUtf8().toBase64()) + tr(" ") + tr("have");
 
     line += tr(" ") + actions.join(tr(" and "));
 
