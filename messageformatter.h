@@ -31,6 +31,7 @@
 
 #include <QHash>
 #include <QColor>
+#include <QString>
 #include <QDateTime>
 #include <IrcGlobal>
 
@@ -52,14 +53,22 @@ IRC_FORWARD_DECLARE_CLASS(IrcQuitMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcTopicMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
+struct MessageFormat
+{
+    QString plainText;
+    QString richText;
+    QString detailed;
+};
+
 class MessageFormatter : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(IrcBuffer* buffer READ buffer WRITE setBuffer)
+    Q_PROPERTY(IrcTextFormat* textFormat READ textFormat WRITE setTextFormat)
     Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor)
-    Q_PROPERTY(bool detailed READ isDetailed WRITE setDetailed)
 
 public:
-    MessageFormatter(QObject* parent = 0);
+    explicit MessageFormatter(QObject* parent = 0);
 
     IrcBuffer* buffer() const;
     void setBuffer(IrcBuffer* buffer);
@@ -67,63 +76,44 @@ public:
     IrcTextFormat* textFormat() const;
     void setTextFormat(IrcTextFormat* format);
 
-    QString timeStampFormat() const;
-    void setTimeStampFormat(const QString& format);
-
     QColor baseColor() const;
     void setBaseColor(const QColor& color);
 
-    bool isDetailed() const;
-    void setDetailed(bool detailed);
+    MessageFormat formatMessage(IrcMessage* message) const;
 
-    Q_INVOKABLE QString formatMessage(IrcMessage* message, Qt::TextFormat format = Qt::RichText) const;
-    QString formatLine(const QString& message, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
-    QString formatContent(const QString& message, Qt::TextFormat format = Qt::RichText) const;
-    QString formatEvents(const QList<int>& types, const QStringList& prefixes, const QStringList& lines, const QDateTime& timeStamp = QDateTime::currentDateTime(), Qt::TextFormat format = Qt::RichText) const;
-    QString formatTimestamp(const QString& message, const QDateTime& timestamp, Qt::TextFormat format = Qt::RichText) const;
+    QString formatText(const QString& text, Qt::TextFormat format) const;
+    QString formatNick(const QString& nick, Qt::TextFormat format, bool colorize = false) const;
+    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool colorize = false) const;
 
 protected:
-    QString formatInviteMessage(IrcInviteMessage* message, Qt::TextFormat format) const;
-    QString formatJoinMessage(IrcJoinMessage* message, Qt::TextFormat format) const;
-    QString formatKickMessage(IrcKickMessage* message, Qt::TextFormat format) const;
-    QString formatModeMessage(IrcModeMessage* message, Qt::TextFormat format) const;
-    QString formatNamesMessage(IrcNamesMessage* message, Qt::TextFormat format) const;
-    QString formatNickMessage(IrcNickMessage* message, Qt::TextFormat format) const;
-    QString formatNoticeMessage(IrcNoticeMessage* message, Qt::TextFormat format) const;
-    QString formatNumericMessage(IrcNumericMessage* message, Qt::TextFormat format) const;
-    QString formatPartMessage(IrcPartMessage* message, Qt::TextFormat format) const;
-    QString formatPongMessage(IrcPongMessage* message, Qt::TextFormat format) const;
-    QString formatPrivateMessage(IrcPrivateMessage* message, Qt::TextFormat format) const;
-    QString formatQuitMessage(IrcQuitMessage* message, Qt::TextFormat format) const;
-    QString formatTopicMessage(IrcTopicMessage* message, Qt::TextFormat format) const;
-    QString formatUnknownMessage(IrcMessage* message, Qt::TextFormat format) const;
-
-    QString formatPingReply(const QString& nick, const QString& arg, Qt::TextFormat format) const;
-
-    QString formatNick(const QString& nick, Qt::TextFormat format = Qt::RichText, bool own = false) const;
-    QString formatPrefix(const QString& prefix, Qt::TextFormat format, bool own = false) const;
-
-    QString formatAnchor(const QString& anchor, const QString& fragment, bool highlight = false) const;
-
-    QString formatIdleTime(int secs) const;
-
-    QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6) const;
-
-    QString messagePrefix(IrcMessage* message) const;
+    MessageFormat formatInviteMessage(IrcInviteMessage* message) const;
+    MessageFormat formatJoinMessage(IrcJoinMessage* message) const;
+    MessageFormat formatKickMessage(IrcKickMessage* message) const;
+    MessageFormat formatModeMessage(IrcModeMessage* message) const;
+    MessageFormat formatNamesMessage(IrcNamesMessage* message) const;
+    MessageFormat formatNickMessage(IrcNickMessage* message) const;
+    MessageFormat formatNoticeMessage(IrcNoticeMessage* message) const;
+    MessageFormat formatNumericMessage(IrcNumericMessage* message) const;
+    MessageFormat formatPartMessage(IrcPartMessage* message) const;
+    MessageFormat formatPongMessage(IrcPongMessage* message) const;
+    MessageFormat formatPrivateMessage(IrcPrivateMessage* message) const;
+    MessageFormat formatQuitMessage(IrcQuitMessage* message) const;
+    MessageFormat formatTopicMessage(IrcTopicMessage* message) const;
+    MessageFormat formatUnknownMessage(IrcMessage* message) const;
 
 private slots:
-    void setNames(const QStringList& names);
+    void indexNames(const QStringList& names);
 
 private:
+    QString formatNames(const QStringList& names, Qt::TextFormat format, int columns = 6) const;
+
     struct Private {
-        bool detailed;
         QColor baseColor;
         IrcBuffer* buffer;
         IrcUserModel* userModel;
-        QString timeStampFormat;
         IrcTextFormat* textFormat;
         QMultiHash<QChar, QString> names;
-        mutable QHash<IrcBuffer*, bool> repeats[2];
+        mutable QHash<IrcBuffer*, bool> repeats;
     } d;
 };
 
