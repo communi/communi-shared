@@ -440,8 +440,14 @@ QString MessageFormatter::formatEvents(const QList<int>& types, const QStringLis
         actions += tr("parted");
     if (types.contains(IrcMessage::Quit))
         actions += tr("quit");
+
+    QStringList changes;
     if (types.contains(IrcMessage::Nick))
-        actions += tr("changed nicks");
+        changes += tr("nicks");
+    if (types.contains(IrcMessage::Mode))
+        changes += tr("modes");
+    if (!changes.isEmpty())
+        actions += tr("changed ") + changes.join(tr(" and "));
 
     if (actions.count() > 2)
         actions = QStringList() << QStringList(actions.mid(0, 2)).join(tr(", ")) << actions.last();
