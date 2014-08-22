@@ -149,6 +149,7 @@ bool ZncManager::processMessage(IrcBuffer* buffer, IrcPrivateMessage* message)
             tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
         }
         if (tmp) {
+            tmp->setTags(message->tags());
             tmp->setTimeStamp(message->timeStamp());
             buffer->receiveMessage(tmp);
             tmp->deleteLater();
