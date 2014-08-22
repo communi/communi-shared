@@ -214,7 +214,10 @@ QString MessageFormatter::formatNick(const QString& nick, Qt::TextFormat format,
     int h = qHash(nick) % 359;
     int s = colorize ? d.baseColor.saturation() : 0;
     int l = d.baseColor.lightness();
-    return tr("<b><font color=\"%1\">%2</b>").arg(QColor::fromHsl(h, s, l).name(), nick);
+    QString n = Irc::nickFromPrefix(nick);
+    if (n.isEmpty())
+        n = nick;
+    return tr("<b><font color=\"%1\">%2</b>").arg(QColor::fromHsl(h, s, l).name(), n);
 }
 
 QString MessageFormatter::formatPrefix(const QString& prefix, Qt::TextFormat format, bool colorize) const
