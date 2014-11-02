@@ -172,8 +172,8 @@ void ZncManager::requestCapabilities()
     QStringList request;
     QStringList available = d.model->network()->availableCapabilities();
 
-    if (available.contains("self-message"))
-        request << "self-message";
+    if (available.contains("znc.in/self-message"))
+        request << "znc.in/self-message";
 
     if (available.contains("znc.in/playback"))
         request << "znc.in/playback";
