@@ -89,6 +89,9 @@ void MessageHandler::handleMessage(IrcMessage* message)
         case IrcMessage::Invite:
             handleInviteMessage(static_cast<IrcInviteMessage*>(message));
             break;
+        case IrcMessage::Motd:
+            handleMotdMessage(static_cast<IrcMotdMessage*>(message));
+            break;
         case IrcMessage::Notice:
             handleNoticeMessage(static_cast<IrcNoticeMessage*>(message));
             break;
@@ -111,6 +114,11 @@ void MessageHandler::handleAwayMessage(IrcAwayMessage* message)
 void MessageHandler::handleInviteMessage(IrcInviteMessage* message)
 {
     sendMessage(message, d.currentBuffer);
+}
+
+void MessageHandler::handleMotdMessage(IrcMotdMessage* message)
+{
+    sendMessage(message, d.defaultBuffer);
 }
 
 void MessageHandler::handleNoticeMessage(IrcNoticeMessage* message)
