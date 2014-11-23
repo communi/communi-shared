@@ -35,6 +35,7 @@
 
 IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
 IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
+IRC_FORWARD_DECLARE_CLASS(IrcAwayMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcInviteMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcNumericMessage)
@@ -63,6 +64,7 @@ protected slots:
     void handleMessage(IrcMessage* message);
 
 protected:
+    void handleAwayMessage(IrcAwayMessage* message);
     void handleInviteMessage(IrcInviteMessage* message);
     void handleNoticeMessage(IrcNoticeMessage* message);
     void handleNumericMessage(IrcNumericMessage* message);

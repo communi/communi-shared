@@ -83,6 +83,9 @@ void MessageHandler::setCurrentBuffer(IrcBuffer* buffer)
 void MessageHandler::handleMessage(IrcMessage* message)
 {
     switch (message->type()) {
+        case IrcMessage::Away:
+            handleAwayMessage(static_cast<IrcAwayMessage*>(message));
+            break;
         case IrcMessage::Invite:
             handleInviteMessage(static_cast<IrcInviteMessage*>(message));
             break;
@@ -98,6 +101,11 @@ void MessageHandler::handleMessage(IrcMessage* message)
         default:
             break;
     }
+}
+
+void MessageHandler::handleAwayMessage(IrcAwayMessage* message)
+{
+    sendMessage(message, d.currentBuffer);
 }
 
 void MessageHandler::handleInviteMessage(IrcInviteMessage* message)
