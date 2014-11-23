@@ -101,6 +101,12 @@ void MessageHandler::handleMessage(IrcMessage* message)
         case IrcMessage::Unknown:
             handleUnknownMessage(static_cast<IrcMessage*>(message));
             break;
+        case IrcMessage::Whois:
+            handleWhoisMessage(static_cast<IrcWhoisMessage*>(message));
+            break;
+        case IrcMessage::Whowas:
+            handleWhowasMessage(static_cast<IrcWhowasMessage*>(message));
+            break;
         default:
             break;
     }
@@ -238,6 +244,16 @@ void MessageHandler::handlePongMessage(IrcPongMessage* message)
 void MessageHandler::handleUnknownMessage(IrcMessage* message)
 {
     sendMessage(message, d.defaultBuffer);
+}
+
+void MessageHandler::handleWhoisMessage(IrcWhoisMessage* message)
+{
+    sendMessage(message, d.currentBuffer);
+}
+
+void MessageHandler::handleWhowasMessage(IrcWhowasMessage* message)
+{
+    sendMessage(message, d.currentBuffer);
 }
 
 void MessageHandler::sendMessage(IrcMessage* message, IrcBuffer* buffer)

@@ -41,6 +41,8 @@ IRC_FORWARD_DECLARE_CLASS(IrcMotdMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcNumericMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcPongMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcWhoisMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcWhowasMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
 class MessageHandler : public QObject
@@ -72,6 +74,8 @@ protected:
     void handleNumericMessage(IrcNumericMessage* message);
     void handlePongMessage(IrcPongMessage* message);
     void handleUnknownMessage(IrcMessage* message);
+    void handleWhoisMessage(IrcWhoisMessage* message);
+    void handleWhowasMessage(IrcWhowasMessage* message);
 
 private:
     void sendMessage(IrcMessage* message, IrcBuffer* buffer);
