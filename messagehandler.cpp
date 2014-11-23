@@ -192,6 +192,7 @@ void MessageHandler::handleNumericMessage(IrcNumericMessage* message)
         case Irc::RPL_INVITING:
         case Irc::RPL_VERSION:
         case Irc::RPL_TIME:
+        case Irc::RPL_TRYAGAIN:
             sendMessage(message, d.currentBuffer);
             break;
 
