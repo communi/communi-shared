@@ -163,7 +163,9 @@ void ZncManager::requestPlayback()
 {
     if (d.model->network()->isCapable("znc.in/playback")) {
         IrcConnection* connection = d.model->connection();
-        connection->sendCommand(IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0)));
+        IrcCommand* cmd = IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0));
+        cmd->setParent(this);
+        connection->sendCommand(cmd);
     }
 }
 
