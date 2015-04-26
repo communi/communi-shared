@@ -177,8 +177,8 @@ void ZncManager::requestCapabilities()
     if (available.contains("znc.in/self-message"))
         request << "znc.in/self-message";
 
-    if (available.contains("znc.in/echo-message"))
-        request << "znc.in/echo-message";
+    if (available.contains("echo-message"))
+        request << "echo-message";
 
     if (available.contains("znc.in/playback"))
         request << "znc.in/playback";
