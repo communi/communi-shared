@@ -174,9 +174,6 @@ void ZncManager::requestCapabilities()
     QStringList request;
     QStringList available = d.model->network()->availableCapabilities();
 
-    if (available.contains("znc.in/self-message"))
-        request << "znc.in/self-message";
-
     if (available.contains("echo-message"))
         request << "echo-message";
 
