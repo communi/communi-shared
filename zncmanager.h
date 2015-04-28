@@ -64,7 +64,6 @@ protected:
 
 private slots:
     void requestPlayback();
-    void requestCapabilities();
     void clearBuffer(IrcBuffer* buffer);
 
 private:
