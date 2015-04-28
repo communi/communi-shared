@@ -59,15 +59,23 @@ void ZncManager::setModel(IrcBufferModel* model)
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
             disconnect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
-            disconnect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->removeMessageFilter(this);
             disconnect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
         }
         d.model = model;
         if (d.model && d.model->connection()) {
+            IrcNetwork* network = d.model->network();
+            QStringList caps = network->requestedCapabilities();
+            caps += "echo-message";
+            caps += "server-time";
+            caps += "znc.in/playback";
+            caps += "znc.in/server-time";
+            caps += "znc.in/echo-message";
+            caps += "znc.in/server-time-iso";
+            network->setRequestedCapabilities(caps);
+
             IrcConnection* connection = d.model->connection();
             connect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
-            connect(connection->network(), SIGNAL(requestingCapabilities()), this, SLOT(requestCapabilities()));
             connection->installMessageFilter(this);
             connect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
         }
@@ -167,28 +175,6 @@ void ZncManager::requestPlayback()
         cmd->setParent(this);
         connection->sendCommand(cmd);
     }
-}
-
-void ZncManager::requestCapabilities()
-{
-    QStringList request;
-    QStringList available = d.model->network()->availableCapabilities();
-
-    if (available.contains("echo-message"))
-        request << "echo-message";
-
-    if (available.contains("znc.in/playback"))
-        request << "znc.in/playback";
-
-    if (available.contains("server-time"))
-        request << "server-time";
-    else if (available.contains("znc.in/server-time-iso"))
-        request << "znc.in/server-time-iso";
-    else if (available.contains("znc.in/server-time"))
-        request << "znc.in/server-time";
-
-    if (!request.isEmpty())
-        d.model->network()->requestCapabilities(request);
 }
 
 void ZncManager::clearBuffer(IrcBuffer* buffer)
