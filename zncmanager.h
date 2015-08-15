@@ -56,11 +56,9 @@ public:
 
 signals:
     void modelChanged(IrcBufferModel* model);
-    void playbackBegin(IrcBuffer* buffer);
-    void playbackEnd(IrcBuffer* buffer);
 
 protected:
-    bool processMessage(IrcBuffer* buffer, IrcPrivateMessage* message);
+    void processMessage(IrcPrivateMessage* message);
 
 private slots:
     void requestPlayback();
@@ -68,7 +66,6 @@ private slots:
 
 private:
     mutable struct Private {
-        IrcBuffer* buffer;
         QDateTime timestamp;
         IrcBufferModel* model;
     } d;

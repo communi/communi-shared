@@ -39,7 +39,6 @@ IRC_USE_NAMESPACE
 ZncManager::ZncManager(QObject* parent) : QObject(parent)
 {
     d.model = 0;
-    d.buffer = 0;
     d.timestamp = QDateTime::fromTime_t(0);
     setModel(qobject_cast<IrcBufferModel*>(parent));
 }
@@ -66,8 +65,10 @@ void ZncManager::setModel(IrcBufferModel* model)
         if (d.model && d.model->connection()) {
             IrcNetwork* network = d.model->network();
             QStringList caps = network->requestedCapabilities();
-            caps += "echo-message";
+            caps += "batch";
             caps += "server-time";
+            caps += "echo-message";
+            caps += "znc.in/batch";
             caps += "znc.in/playback";
             caps += "znc.in/server-time";
             caps += "znc.in/echo-message";
@@ -85,42 +86,32 @@ void ZncManager::setModel(IrcBufferModel* model)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
-    bool playback = false;
     if (message->connection()->isConnected() && message->tags().contains("time")) {
         QDateTime timestamp = message->tags().value("time").toDateTime();
         if (timestamp.isValid()) {
             message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
-            playback = timestamp < d.timestamp;
             d.timestamp = qMax(timestamp, d.timestamp);
         }
     }
 
-    if (!playback && d.buffer) {
-        emit playbackEnd(d.buffer);
-        d.buffer = 0;
-    }
-
-    if (message->type() == IrcMessage::Private) {
-        IrcPrivateMessage* msg = static_cast<IrcPrivateMessage*>(message);
-        IrcBuffer* buffer = d.model->find(msg->target());
-        if (buffer) {
-            if (d.buffer != buffer) {
-                if (d.buffer) {
-                    emit playbackEnd(d.buffer);
-                    d.buffer = 0;
-                }
-                if (playback) {
-                    emit playbackBegin(buffer);
-                    d.buffer = buffer;
-                }
+    if (message->type() == IrcMessage::Batch) {
+        IrcBatchMessage* batch = static_cast<IrcBatchMessage*>(message);
+        if (batch->batch() == "znc.in/playback") {
+            IrcBuffer* buffer = d.model->add(batch->parameters().value(2));
+            foreach (IrcMessage* msg, batch->messages()) {
+                msg->setFlags(msg->flags() | IrcMessage::Playback);
+                if (msg->type() == IrcMessage::Private)
+                    processMessage(static_cast<IrcPrivateMessage*>(msg));
             }
-            return processMessage(buffer, msg);
+            buffer->receiveMessage(batch);
+            return true;
         }
     }
+
     return IgnoreManager::instance()->messageFilter(message);
 }
 
-bool ZncManager::processMessage(IrcBuffer* buffer, IrcPrivateMessage* message)
+void ZncManager::processMessage(IrcPrivateMessage* message)
 {
     if (message->nick() == "*buffextras") {
         const QString msg = message->content();
@@ -128,43 +119,42 @@ bool ZncManager::processMessage(IrcBuffer* buffer, IrcPrivateMessage* message)
         const QString prefix = msg.left(idx);
         const QString content = msg.mid(idx + 1);
 
-        IrcMessage* tmp = 0;
+        message->setPrefix(prefix);
         if (content.startsWith("joined")) {
-            tmp = IrcMessage::fromParameters(prefix, "JOIN", QStringList() << message->target(), message->connection());
+            message->setTag("intent", "JOIN");
+            message->setParameters(QStringList() << message->target());
         } else if (content.startsWith("parted")) {
+            message->setTag("intent", "PART");
             QString reason = content.mid(content.indexOf("[") + 1);
             reason.chop(1);
-            tmp = IrcMessage::fromParameters(prefix, "PART", QStringList() << message->target() << reason , message->connection());
+            message->setParameters(QStringList() << message->target() << reason);
         } else if (content.startsWith("quit")) {
+            message->setTag("intent", "QUIT");
             QString reason = content.mid(content.indexOf("[") + 1);
             reason.chop(1);
-            tmp = IrcMessage::fromParameters(prefix, "QUIT", QStringList() << reason , message->connection());
+            message->setParameters(QStringList() << reason);
         } else if (content.startsWith("is")) {
+            message->setTag("intent", "NICK");
             const QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-            tmp = IrcMessage::fromParameters(prefix, "NICK", QStringList() << tokens.last() , message->connection());
+            message->setParameters(QStringList() << tokens.last());
         } else if (content.startsWith("set")) {
+            message->setTag("intent", "MODE");
             QStringList tokens = content.split(" ", QString::SkipEmptyParts);
             const QString user = tokens.takeLast();
             const QString mode = tokens.takeLast();
-            tmp = IrcMessage::fromParameters(prefix, "MODE", QStringList() << message->target() << mode << user, message->connection());
+            message->setParameters(QStringList() << message->target() << mode << user);
         } else if (content.startsWith("changed")) {
+            message->setTag("intent", "TOPIC");
             const QString topic = content.mid(content.indexOf(":") + 2);
-            tmp = IrcMessage::fromParameters(prefix, "TOPIC", QStringList() << message->target() << topic, message->connection());
+            message->setParameters(QStringList() << message->target() << topic);
         } else if (content.startsWith("kicked")) {
+            message->setTag("intent", "KICK");
             QString reason = content.mid(content.indexOf("[") + 1);
             reason.chop(1);
             QStringList tokens = content.split(" ", QString::SkipEmptyParts);
-            tmp = IrcMessage::fromParameters(prefix, "KICK", QStringList() << message->target() << tokens.value(1) << reason, message->connection());
-        }
-        if (tmp) {
-            tmp->setTags(message->tags());
-            tmp->setTimeStamp(message->timeStamp());
-            buffer->receiveMessage(tmp);
-            tmp->deleteLater();
-            return true;
+            message->setParameters(QStringList() << message->target() << tokens.value(1) << reason);
         }
     }
-    return IgnoreManager::instance()->messageFilter(message);
 }
 
 void ZncManager::requestPlayback()
