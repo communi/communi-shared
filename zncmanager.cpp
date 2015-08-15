@@ -86,7 +86,7 @@ void ZncManager::setModel(IrcBufferModel* model)
 bool ZncManager::messageFilter(IrcMessage* message)
 {
     bool playback = false;
-    if (message->tags().contains("time")) {
+    if (message->connection()->isConnected() && message->tags().contains("time")) {
         QDateTime timestamp = message->tags().value("time").toDateTime();
         if (timestamp.isValid()) {
             message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
