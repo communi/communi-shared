@@ -34,16 +34,8 @@
 #include <IrcGlobal>
 
 IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
-IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
-IRC_FORWARD_DECLARE_CLASS(IrcAwayMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcInviteMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcMotdMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcNumericMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcPongMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcWhoisMessage)
-IRC_FORWARD_DECLARE_CLASS(IrcWhowasMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
+IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
 
 class MessageHandler : public QObject
 {
@@ -65,17 +57,6 @@ public slots:
 
 protected slots:
     void handleMessage(IrcMessage* message);
-
-protected:
-    void handleAwayMessage(IrcAwayMessage* message);
-    void handleInviteMessage(IrcInviteMessage* message);
-    void handleMotdMessage(IrcMotdMessage* message);
-    void handleNoticeMessage(IrcNoticeMessage* message);
-    void handleNumericMessage(IrcNumericMessage* message);
-    void handlePongMessage(IrcPongMessage* message);
-    void handleUnknownMessage(IrcMessage* message);
-    void handleWhoisMessage(IrcWhoisMessage* message);
-    void handleWhowasMessage(IrcWhowasMessage* message);
 
 private:
     void sendMessage(IrcMessage* message, IrcBuffer* buffer);

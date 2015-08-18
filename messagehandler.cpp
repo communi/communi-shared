@@ -83,178 +83,19 @@ void MessageHandler::setCurrentBuffer(IrcBuffer* buffer)
 void MessageHandler::handleMessage(IrcMessage* message)
 {
     switch (message->type()) {
-        case IrcMessage::Away:
-            handleAwayMessage(static_cast<IrcAwayMessage*>(message));
-            break;
-        case IrcMessage::Invite:
-            handleInviteMessage(static_cast<IrcInviteMessage*>(message));
-            break;
         case IrcMessage::Motd:
-            handleMotdMessage(static_cast<IrcMotdMessage*>(message));
-            break;
-        case IrcMessage::Notice:
-            handleNoticeMessage(static_cast<IrcNoticeMessage*>(message));
-            break;
-        case IrcMessage::Numeric:
-            handleNumericMessage(static_cast<IrcNumericMessage*>(message));
-            break;
-        case IrcMessage::Unknown:
-            handleUnknownMessage(static_cast<IrcMessage*>(message));
-            break;
-        case IrcMessage::Whois:
-            handleWhoisMessage(static_cast<IrcWhoisMessage*>(message));
-            break;
-        case IrcMessage::Whowas:
-            handleWhowasMessage(static_cast<IrcWhowasMessage*>(message));
-            break;
-        default:
-            break;
-    }
-}
-
-void MessageHandler::handleAwayMessage(IrcAwayMessage* message)
-{
-    sendMessage(message, d.currentBuffer);
-}
-
-void MessageHandler::handleInviteMessage(IrcInviteMessage* message)
-{
-    sendMessage(message, d.currentBuffer);
-}
-
-void MessageHandler::handleMotdMessage(IrcMotdMessage* message)
-{
-    sendMessage(message, d.defaultBuffer);
-}
-
-void MessageHandler::handleNoticeMessage(IrcNoticeMessage* message)
-{
-    QString target = message->target();
-
-    // forward ChanServ's "[#chan] msg" to the appropriate channel
-    if (target == message->connection()->nickName() && message->nick() == "ChanServ") {
-        const QString msg = message->content();
-        if (msg.startsWith("[")) {
-            int idx = msg.indexOf("]");
-            if (idx != -1) {
-                const QString view = msg.mid(1, idx - 1);
-                if (d.model->contains(view)) {
-                    QStringList params = message->parameters();
-                    params.replace(0, view);
-                    message->setParameters(params);
-                    target = view;
-                }
-            }
-        }
-    }
-
-    if (target == "$$*") {
-        // global notice
-        foreach (IrcBuffer* buffer, d.model->buffers())
-            buffer->receiveMessage(message);
-    } else if (!message->connection()->isConnected() || target.isEmpty() || target == "*")
-        sendMessage(message, d.defaultBuffer);
-    else if (IrcBuffer* buffer = d.model->find(message->nick()))
-        sendMessage(message, buffer);
-    else if (target == message->connection()->nickName() || target.contains("*"))
-        sendMessage(message, d.currentBuffer);
-    else if (d.model)
-        sendMessage(message, d.model->find(target));
-}
-
-void MessageHandler::handleNumericMessage(IrcNumericMessage* message)
-{
-    if (Irc::codeToString(message->code()).startsWith("ERR_")) {
-        sendMessage(message, d.currentBuffer);
-        return;
-    }
-
-    switch (message->code()) {
-        case Irc::RPL_ENDOFWHO:
-        case Irc::RPL_WHOREPLY:
-        case Irc::RPL_UNAWAY:
-        case Irc::RPL_NOWAWAY:
-        case Irc::RPL_AWAY:
-        case Irc::RPL_WHOISOPERATOR:
-        case Irc::RPL_WHOISMODES: // "is using modes"
-        case Irc::RPL_WHOISREGNICK: // "is a registered nick"
-        case Irc::RPL_WHOISHELPOP: // "is available for help"
-        case Irc::RPL_WHOISSPECIAL: // "is identified to services"
-        case Irc::RPL_WHOISHOST: // nick is connecting from <...>
-        case Irc::RPL_WHOISSECURE: // nick is using a secure connection
-        case Irc::RPL_WHOISUSER:
-        case Irc::RPL_WHOISSERVER:
-        case Irc::RPL_WHOISACCOUNT: // nick user is logged in as
-        case Irc::RPL_WHOWASUSER:
-        case Irc::RPL_WHOISIDLE:
-        case Irc::RPL_WHOISCHANNELS:
-        case Irc::RPL_ENDOFWHOIS:
-        case Irc::RPL_INVITING:
-        case Irc::RPL_VERSION:
-        case Irc::RPL_TIME:
-        case Irc::RPL_TRYAGAIN:
-            sendMessage(message, d.currentBuffer);
-            break;
-
-        case Irc::RPL_ENDOFBANLIST:
-        case Irc::RPL_ENDOFEXCEPTLIST:
-        case Irc::RPL_ENDOFINFO:
-        case Irc::RPL_ENDOFINVITELIST:
-        case Irc::RPL_ENDOFLINKS:
-        case Irc::RPL_ENDOFSTATS:
-        case Irc::RPL_ENDOFUSERS:
-        case Irc::RPL_ENDOFWHOWAS:
-        case Irc::RPL_NOTOPIC:
-        case Irc::RPL_TOPIC:
-        case Irc::RPL_CHANNELMODEIS:
-            break; // ignore
-
-        case Irc::RPL_CHANNEL_URL:
-        case Irc::RPL_CREATIONTIME:
-        case Irc::RPL_TOPICWHOTIME:
-            sendMessage(message, message->parameters().value(1));
-            break;
-
-        case Irc::RPL_NAMREPLY: {
-            const int count = message->parameters().count();
-            const QString channel = message->parameters().value(count - 2);
-            IrcBuffer* buffer = d.model->find(channel.toLower());
-            if (buffer)
-                buffer->receiveMessage(message);
-            else if (d.currentBuffer)
-                d.currentBuffer->receiveMessage(message);
-            break;
-        }
-
-        case Irc::RPL_ENDOFNAMES:
-            if (d.model->contains(message->parameters().value(1)))
-                sendMessage(message, message->parameters().value(1));
-            break;
-
-        default:
             sendMessage(message, d.defaultBuffer);
             break;
+        case IrcMessage::Numeric:
+            if (static_cast<IrcNumericMessage*>(message)->code() < 300)
+                sendMessage(message, d.defaultBuffer);
+            else
+                sendMessage(message, d.currentBuffer);
+            break;
+        default:
+            sendMessage(message, d.currentBuffer);
+            break;
     }
-}
-
-void MessageHandler::handlePongMessage(IrcPongMessage* message)
-{
-    sendMessage(message, d.currentBuffer);
-}
-
-void MessageHandler::handleUnknownMessage(IrcMessage* message)
-{
-    sendMessage(message, d.defaultBuffer);
-}
-
-void MessageHandler::handleWhoisMessage(IrcWhoisMessage* message)
-{
-    sendMessage(message, d.currentBuffer);
-}
-
-void MessageHandler::handleWhowasMessage(IrcWhowasMessage* message)
-{
-    sendMessage(message, d.currentBuffer);
 }
 
 void MessageHandler::sendMessage(IrcMessage* message, IrcBuffer* buffer)
