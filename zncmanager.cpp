@@ -86,13 +86,8 @@ void ZncManager::setModel(IrcBufferModel* model)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
-    if (message->connection()->isConnected() && message->tags().contains("time")) {
-        QDateTime timestamp = message->tags().value("time").toDateTime();
-        if (timestamp.isValid()) {
-            message->setTimeStamp(timestamp.toTimeSpec(Qt::LocalTime));
-            d.timestamp = qMax(timestamp, d.timestamp);
-        }
-    }
+    if (message->connection()->isConnected())
+        d.timestamp = qMax(d.timestamp, message->timeStamp());
 
     if (message->type() == IrcMessage::Batch) {
         IrcBatchMessage* batch = static_cast<IrcBatchMessage*>(message);
