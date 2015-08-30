@@ -99,7 +99,6 @@ bool ZncManager::messageFilter(IrcMessage* message)
                     processMessage(static_cast<IrcPrivateMessage*>(msg));
             }
             buffer->receiveMessage(batch);
-            return true;
         }
     }
 
