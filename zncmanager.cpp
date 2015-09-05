@@ -86,8 +86,16 @@ void ZncManager::setModel(IrcBufferModel* model)
 
 bool ZncManager::messageFilter(IrcMessage* message)
 {
-    if (message->connection()->isConnected())
+    IrcConnection* connection = message->connection();
+    if (connection->isConnected())
         d.timestamp = qMax(d.timestamp, message->timeStamp());
+
+    if (message->type() == IrcMessage::Private && message->isOwn()) {
+        IrcNetwork* network = message->network();
+        IrcPrivateMessage* pm = static_cast<IrcPrivateMessage*>(message);
+        if (pm->target() == "*playback" && network->isCapable("znc.in/playback") && network->isCapable("echo-message"))
+            return true;
+    }
 
     if (message->type() == IrcMessage::Batch) {
         IrcBatchMessage* batch = static_cast<IrcBatchMessage*>(message);
