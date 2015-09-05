@@ -100,6 +100,8 @@ void MessageHandler::handleMessage(IrcMessage* message)
 
 void MessageHandler::sendMessage(IrcMessage* message, IrcBuffer* buffer)
 {
+    if (!buffer)
+        buffer = d.defaultBuffer;
     if (buffer)
         buffer->receiveMessage(message);
 }
