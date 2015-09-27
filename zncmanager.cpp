@@ -165,6 +165,6 @@ void ZncManager::clearBuffer(IrcBuffer* buffer)
 {
     if (d.model->network()->isCapable("znc.in/playback") && !buffer->title().contains("*")) {
         IrcConnection* connection = d.model->connection();
-        connection->sendRaw(QString("ZNC *playback CLEAR * %1").arg(buffer->title()));
+        connection->sendRaw(QString("ZNC *playback CLEAR %1").arg(buffer->title()));
     }
 }
