@@ -90,13 +90,6 @@ bool ZncManager::messageFilter(IrcMessage* message)
     if (connection->isConnected())
         d.timestamp = qMax(d.timestamp, message->timeStamp());
 
-    if (message->type() == IrcMessage::Private && message->isOwn()) {
-        IrcNetwork* network = message->network();
-        IrcPrivateMessage* pm = static_cast<IrcPrivateMessage*>(message);
-        if (pm->target() == "*playback" && network->isCapable("znc.in/playback") && network->isCapable("echo-message"))
-            return true;
-    }
-
     if (message->type() == IrcMessage::Batch) {
         IrcBatchMessage* batch = static_cast<IrcBatchMessage*>(message);
         if (batch->batch() == "znc.in/playback") {
@@ -164,14 +157,14 @@ void ZncManager::requestPlayback()
 {
     if (d.model->network()->isCapable("znc.in/playback")) {
         IrcConnection* connection = d.model->connection();
-        IrcCommand* cmd = IrcCommand::createMessage("*playback", QString("PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0));
-        cmd->setParent(this);
-        connection->sendCommand(cmd);
+        connection->sendRaw(QString("ZNC *playback PLAY * %1").arg(d.timestamp.isValid() ? d.timestamp.toTime_t() : 0));
     }
 }
 
 void ZncManager::clearBuffer(IrcBuffer* buffer)
 {
-    if (d.model->network()->isCapable("znc.in/playback") && !buffer->title().contains("*"))
-        buffer->sendCommand(IrcCommand::createMessage("*playback", QString("CLEAR %1").arg(buffer->title())));
+    if (d.model->network()->isCapable("znc.in/playback") && !buffer->title().contains("*")) {
+        IrcConnection* connection = d.model->connection();
+        connection->sendRaw(QString("ZNC *playback CLEAR * %1").arg(buffer->title()));
+    }
 }
