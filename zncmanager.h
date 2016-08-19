@@ -32,6 +32,7 @@
 #include <QObject>
 #include <QDateTime>
 #include <IrcMessageFilter>
+#include "sharedglobal.h"
 
 IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
 IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
@@ -39,7 +40,7 @@ IRC_FORWARD_DECLARE_CLASS(IrcNoticeMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcPrivateMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 
-class ZncManager : public QObject, public IrcMessageFilter
+class SHARED_EXPORT ZncManager : public QObject, public IrcMessageFilter
 {
     Q_OBJECT
     Q_INTERFACES(IrcMessageFilter)

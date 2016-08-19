@@ -31,8 +31,9 @@
 
 #include <QNetworkSession>
 #include <QNetworkConfigurationManager>
+#include "sharedglobal.h"
 
-class NetworkSession : public QObject
+class SHARED_EXPORT NetworkSession : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool online READ isOnline NOTIFY onlineStateChanged)

@@ -32,11 +32,12 @@
 #include <QObject>
 #include <QStringList>
 #include <IrcMessageFilter>
+#include "sharedglobal.h"
 
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcConnection)
 
-class IgnoreManager : public QObject, public IrcMessageFilter
+class SHARED_EXPORT IgnoreManager : public QObject, public IrcMessageFilter
 {
     Q_OBJECT
     Q_INTERFACES(IrcMessageFilter)

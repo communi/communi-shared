@@ -32,12 +32,13 @@
 #include <QObject>
 #include <QPointer>
 #include <IrcGlobal>
+#include "sharedglobal.h"
 
 IRC_FORWARD_DECLARE_CLASS(IrcBuffer)
 IRC_FORWARD_DECLARE_CLASS(IrcMessage)
 IRC_FORWARD_DECLARE_CLASS(IrcBufferModel)
 
-class MessageHandler : public QObject
+class SHARED_EXPORT MessageHandler : public QObject
 {
     Q_OBJECT
 

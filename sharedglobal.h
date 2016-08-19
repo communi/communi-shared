@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2008-2016 The Communi Project
+  Copyright (C) 2008-2015 The Communi Project
 
   You may use this file under the terms of BSD license as follows:
 
@@ -26,46 +26,15 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef SHAREDTIMER_H
-#define SHAREDTIMER_H
+#ifndef SHAREDGLOBAL_H
+#define SHAREDGLOBAL_H
 
-#include <QObject>
-#include <QByteArray>
-#include <QMultiHash>
-#include <QBasicTimer>
-#include "sharedglobal.h"
+#include <QtGlobal>
 
-class SHARED_EXPORT SharedTimer : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(int interval READ interval WRITE setInterval)
+#if defined(BUILD_SHARED)
+#  define SHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define SHARED_EXPORT Q_DECL_IMPORT
+#endif
 
-public:
-    static SharedTimer* instance();
-
-    int interval() const;
-    void setInterval(int interval);
-
-    void registerReceiver(QObject* receiver, const QByteArray& member);
-    void unregisterReceiver(QObject* receiver, const QByteArray& member = QByteArray());
-
-    void pause();
-    void resume();
-
-protected:
-    void timerEvent(QTimerEvent* event);
-
-private slots:
-    void destroyed(QObject* object);
-
-private:
-    SharedTimer(QObject* parent = 0);
-
-    struct Private {
-        int interval;
-        QBasicTimer timer;
-        QMultiHash<QObject*, QByteArray> members;
-    } d;
-};
-
-#endif // SHAREDTIMER_H
+#endif // SHAREDGLOBAL_H
