@@ -32,6 +32,7 @@
 #include <IrcMessage>
 #include <IrcChannel>
 #include <IrcBuffer>
+#include <Irc>
 
 IRC_USE_NAMESPACE
 
@@ -84,17 +85,46 @@ void MessageHandler::handleMessage(IrcMessage* message)
 {
     switch (message->type()) {
         case IrcMessage::Motd:
+        {
             sendMessage(message, d.defaultBuffer);
             break;
+        }
         case IrcMessage::Numeric:
-            if (static_cast<IrcNumericMessage*>(message)->code() < 300)
+        {
+            IrcNumericMessage *numMsg = static_cast<IrcNumericMessage*>(message);
+
+            if (numMsg->code() == Irc::RPL_CHANNEL_URL)
+                sendMessage(message, message->parameters().at(1));
+            else if (numMsg->code() < 300)
                 sendMessage(message, d.defaultBuffer);
             else
                 sendMessage(message, d.currentBuffer);
             break;
+        }
+        case IrcMessage::Notice:
+        {
+            if (message->prefix() == "ChanServ!ChanServ@services.") {
+                // Forward messages from ChanServ to the appropriate channel
+                QString content = static_cast<IrcNoticeMessage*>(message)->content();
+                if (content.startsWith("[")) {
+                    int i = content.indexOf("]");
+                    if (i != -1) {
+                        QString title = content.mid(1, i - 1);
+                        sendMessage(message, title);
+                    }
+                }
+            }
+            break;
+        }
         default:
+        {
             sendMessage(message, d.currentBuffer);
             break;
+        }
+    }
+
+    if (!message->property("handled").isValid() || !message->property("handled").toBool()) {
+        sendMessage(message, d.currentBuffer);
     }
 }
 
@@ -104,9 +134,13 @@ void MessageHandler::sendMessage(IrcMessage* message, IrcBuffer* buffer)
         buffer = d.defaultBuffer;
     if (buffer)
         buffer->receiveMessage(message);
+
+    message->setProperty("handled", true);
 }
 
-void MessageHandler::sendMessage(IrcMessage* message, const QString& buffer)
+void MessageHandler::sendMessage(IrcMessage* message, const QString& bufferName)
 {
-    sendMessage(message, d.model->find(buffer));
+    IrcBuffer *buffer = d.model->find(bufferName);
+    sendMessage(message, buffer);
 }
+
