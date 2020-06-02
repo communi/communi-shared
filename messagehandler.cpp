@@ -54,10 +54,10 @@ void MessageHandler::setModel(IrcBufferModel* model)
 {
     if (d.model != model) {
         if (d.model)
-            disconnect(d.model, SIGNAL(messageIgnored(IrcMessage*)), this, SLOT(handleMessage(IrcMessage*)));
+            disconnect(d.model.data(), &IrcBufferModel::messageIgnored, this, &MessageHandler::handleMessage);
         d.model = model;
         if (model)
-            connect(model, SIGNAL(messageIgnored(IrcMessage*)), this, SLOT(handleMessage(IrcMessage*)));
+            connect(model, &IrcBufferModel::messageIgnored, this, &MessageHandler::handleMessage);
     }
 }
 

@@ -63,7 +63,7 @@ void SharedTimer::registerReceiver(QObject* receiver, const QByteArray& member)
             d.timer.start(d.interval, this);
 
         if (!d.members.contains(receiver))
-            connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(destroyed(QObject*)));
+            connect(receiver, &QObject::destroyed, this, &QObject::destroyed);
 
         d.members.insertMulti(receiver, member);
     }
@@ -80,7 +80,7 @@ void SharedTimer::unregisterReceiver(QObject* receiver, const QByteArray& member
         d.members.remove(receiver, member);
 
     if (!d.members.contains(receiver))
-        disconnect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(destroyed(QObject*)));
+        disconnect(receiver, &QObject::destroyed, this, &QObject::destroyed);
 
     if (d.members.isEmpty())
         d.timer.stop();

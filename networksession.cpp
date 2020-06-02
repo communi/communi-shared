@@ -36,8 +36,8 @@ NetworkSession::NetworkSession(QObject* parent) : QObject(parent)
     d.manager = new QNetworkConfigurationManager(this);
 
     d.config = d.manager->defaultConfiguration();
-    connect(d.manager, SIGNAL(onlineStateChanged(bool)), this, SLOT(onOnlineStateChanged(bool)));
-    connect(d.manager, SIGNAL(configurationChanged(QNetworkConfiguration)), this, SLOT(onNetworkConfigurationChanged(QNetworkConfiguration)));
+    connect(d.manager, &QNetworkConfigurationManager::onlineStateChanged, this, &NetworkSession::onOnlineStateChanged);
+    connect(d.manager, &QNetworkConfigurationManager::configurationChanged, this, &NetworkSession::onNetworkConfigurationChanged);
 }
 
 bool NetworkSession::isOnline() const

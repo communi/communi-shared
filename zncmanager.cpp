@@ -57,9 +57,9 @@ void ZncManager::setModel(IrcBufferModel* model)
     if (d.model != model) {
         if (d.model && d.model->connection()) {
             IrcConnection* connection = d.model->connection();
-            disconnect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
+            disconnect(connection, &IrcConnection::connected, this, &ZncManager::requestPlayback);
             connection->removeMessageFilter(this);
-            disconnect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
+            disconnect(model, &IrcBufferModel::removed, this, &ZncManager::clearBuffer);
         }
         d.model = model;
         if (d.model && d.model->connection()) {
@@ -76,9 +76,9 @@ void ZncManager::setModel(IrcBufferModel* model)
             network->setRequestedCapabilities(caps);
 
             IrcConnection* connection = d.model->connection();
-            connect(connection, SIGNAL(connected()), this, SLOT(requestPlayback()));
+            connect(connection, &IrcConnection::connected, this, &ZncManager::requestPlayback);
             connection->installMessageFilter(this);
-            connect(model, SIGNAL(removed(IrcBuffer*)), this, SLOT(clearBuffer(IrcBuffer*)));
+            connect(model, &IrcBufferModel::removed, this, &ZncManager::clearBuffer);
         }
         emit modelChanged(model);
     }
